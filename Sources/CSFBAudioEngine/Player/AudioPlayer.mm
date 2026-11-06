@@ -15,6 +15,7 @@
 #import <cmath>
 #import <concepts>
 #import <limits>
+#import <optional>
 #import <ranges>
 #import <span>
 
@@ -229,6 +230,22 @@ uint64_t hostTimeDeltaForSeconds(double seconds) noexcept {
     }
     return host_time::fromNanoseconds(static_cast<uint64_t>(seconds * static_cast<double>(nanosecondsPerSecond)));
 }
+
+#ifndef NDEBUG
+/// Returns a string representation of a playback state
+const char *playbackStateDescription(SFBAudioPlayerPlaybackState playbackState) noexcept {
+    switch (playbackState) {
+    case SFBAudioPlayerPlaybackStatePlaying:
+        return "playing";
+    case SFBAudioPlayerPlaybackStatePaused:
+        return "paused";
+    case SFBAudioPlayerPlaybackStateStopped:
+        return "stopped";
+    default:
+        return nullptr;
+    }
+}
+#endif /* !NDEBUG */
 
 } /* namespace */
 
@@ -473,7 +490,9 @@ inline bool AudioPlayer::DecoderState::seekToFrame(AVAudioFramePosition frame, N
     assert(frame != SFBUnknownFramePosition);
     assert(supportsSeeking_);
 
+#ifndef NDEBUG
     os_log_debug(log_, "Seeking to frame %lld in %{public}@", frame, decoder_);
+#endif /* !NDEBUG */
 
     if (NSError *seekError = nil; ![decoder_ seekToFrame:frame error:&seekError]) {
         os_log_error(log_, "Error seeking to frame %lld in %{public}@", frame, decoder_);
@@ -658,7 +677,9 @@ sfb::AudioPlayer::~AudioPlayer() noexcept {
     // Delete any remaining decoder state
     activeDecoders_.clear();
 
+#ifndef NDEBUG
     os_log_debug(log_, "<AudioPlayer: %p> destroyed", this);
+#endif /* !NDEBUG */
 }
 
 bool sfb::AudioPlayer::ownsCurrentThread() const noexcept { return threadOwner == this; }
@@ -839,8 +860,9 @@ bool sfb::AudioPlayer::setNowPlaying(Decoder nowPlaying) noexcept {
 }
 
 void sfb::AudioPlayer::notifyDelegateOfNowPlayingChange(Decoder nowPlaying) noexcept {
+#ifndef NDEBUG
     os_log_debug(log_, "Now playing changed to %{public}@", nowPlaying);
-
+#endif
     if (__strong SFBAudioPlayer *player = player_; player != nil) {
         if (__strong id<SFBAudioPlayerDelegate> delegate = player.delegate;
             delegate != nil && [delegate respondsToSelector:@selector(audioPlayer:nowPlayingChanged:)]) {
@@ -1084,7 +1106,9 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
     pthread_setname_np("AudioPlayer.Decoding");
     pthread_set_qos_class_self_np(QOS_CLASS_USER_INITIATED, 0);
 
+#ifndef NDEBUG
     os_log_debug(log_, "<AudioPlayer: %p> decoding thread starting", this);
+#endif /* !NDEBUG */
 
     // The buffer between the decoder state and the ring buffer
     AVAudioPCMBuffer *buffer = nil;
@@ -1133,7 +1157,9 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
         decodingSemaphore_.wait(timeout);
     }
 
+#ifndef NDEBUG
     os_log_debug(log_, "<AudioPlayer: %p> decoding thread complete", this);
+#endif /* !NDEBUG */
 }
 
 sfb::AudioPlayer::DecoderState *sfb::AudioPlayer::processDecoderCancelations(bool &formatMismatch) noexcept {
@@ -1149,10 +1175,12 @@ sfb::AudioPlayer::DecoderState *sfb::AudioPlayer::processDecoderCancelations(boo
             continue;
         }
 
-        if (decoderState->error_ == nil) {
-            os_log_debug(log_, "Canceling decoding for %{public}@", decoderState->decoder_);
-        } else {
+        if (decoderState->error_ != nil) {
             os_log_error(log_, "Aborting decoding for %{public}@ due to error", decoderState->decoder_);
+        } else {
+#ifndef NDEBUG
+            os_log_debug(log_, "Canceling decoding for %{public}@", decoderState->decoder_);
+#endif /* !NDEBUG */
         }
 
         if (bits::is_set(decoderFlags, DecoderState::Flags::decodingStarted)) {
@@ -1234,7 +1262,9 @@ bool sfb::AudioPlayer::processPendingSeek(DecoderState *decoderState, bool &form
     }
 
     if (bits::is_set(decoderState->loadFlags(), DecoderState::Flags::decodingComplete)) {
+#ifndef NDEBUG
         os_log_debug(log_, "Resuming decoding for %{public}@", decoderState->decoder_);
+#endif /* !NDEBUG */
 
         // The decoder has not completed rendering so the ring buffer format and the decoder's format still
         // match. Clear the format mismatch flag so rendering can continue; the flag will be set again when
@@ -1281,7 +1311,9 @@ void sfb::AudioPlayer::suspendAndRewindDecodersFollowing(uint64_t sequenceNumber
             continue;
         }
 
+#ifndef NDEBUG
         os_log_debug(log_, "Suspending decoding for %{public}@", nextDecoderState->decoder_);
+#endif /* !NDEBUG */
 
         // TODO: Investigate a per-state buffer to mitigate frame loss
         if (nextDecoderState->supportsSeeking()) {
@@ -1322,7 +1354,9 @@ sfb::AudioPlayer::DecoderState *sfb::AudioPlayer::dequeueNextDecoder() noexcept 
     }
 
     if (activeDecoders_.size() >= maximumActiveDecoders) {
+#ifndef NDEBUG
         os_log_debug(log_, "Maximum number of active decoders reached");
+#endif /* !NDEBUG */
         return nullptr;
     }
 
@@ -1377,7 +1411,9 @@ bool sfb::AudioPlayer::prepareDequeuedDecoder(DecoderState *decoderState) noexce
         return false;
     }
 
+#ifndef NDEBUG
     os_log_debug(log_, "Dequeued %{public}@", decoderState->decoder_);
+#endif /* !NDEBUG */
 
     return true;
 }
@@ -1448,7 +1484,9 @@ bool sfb::AudioPlayer::configureForDecoder(DecoderState *&decoderState, AVAudioP
             return true;
         }
 
+#ifndef NDEBUG
         os_log_debug(log_, "Non-gapless join for %{public}@", decoderState->decoder_);
+#endif /* !NDEBUG */
 
         auto renderFormat = decoderState->converter_.outputFormat;
         if (NSError *error = nil; !configureProcessingGraphAndRingBufferForFormat(renderFormat, &error)) {
@@ -1509,7 +1547,9 @@ bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *&decoderState, AVAudio
         if (bits::is_clear(decoderFlags, DecoderState::Flags::decodingStarted)) {
             decoderState->setFlags(DecoderState::Flags::decodingStarted);
             if (bits::is_clear(decoderFlags, DecoderState::Flags::decodingSuspended)) {
+#ifndef NDEBUG
                 os_log_debug(log_, "Decoding starting for %{public}@", decoderState->decoder_);
+#endif /* !NDEBUG */
                 // Submit the decoding started event for the initial start only
                 if (events_.enqueue(EventCommand::decodingStarted, decoderState->sequenceNumber_)) [[likely]] {
                     eventSemaphore_.signal();
@@ -1517,7 +1557,9 @@ bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *&decoderState, AVAudio
                     os_log_fault(log_, "Error writing decoding started event");
                 }
             } else {
+#ifndef NDEBUG
                 os_log_debug(log_, "Decoding restarting after suspension for %{public}@", decoderState->decoder_);
+#endif /* !NDEBUG */
             }
         }
 
@@ -1547,11 +1589,13 @@ bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *&decoderState, AVAudio
                 }
             }
 
+#ifndef NDEBUG
             if (!resumed) {
                 os_log_debug(log_, "Decoding complete for %{public}@", decoderState->decoder_);
             } else {
                 os_log_debug(log_, "Decoding complete after resuming for %{public}@", decoderState->decoder_);
             }
+#endif /* !NDEBUG */
         }
 
         // After the final chunk is written the render block may complete rendering at any time, after which
@@ -1789,7 +1833,9 @@ void sfb::AudioPlayer::processEvents(std::stop_token stoken) noexcept {
     pthread_setname_np("AudioPlayer.Events");
     pthread_set_qos_class_self_np(QOS_CLASS_USER_INITIATED, 0);
 
+#ifndef NDEBUG
     os_log_debug(log_, "<AudioPlayer: %p> event processing thread starting", this);
+#endif /* !NDEBUG */
 
     while (!stoken.stop_requested()) {
 #ifndef NDEBUG
@@ -1865,7 +1911,9 @@ void sfb::AudioPlayer::processEvents(std::stop_token stoken) noexcept {
         eventSemaphore_.wait(timeout);
     }
 
+#ifndef NDEBUG
     os_log_debug(log_, "<AudioPlayer: %p> event processing thread complete", this);
+#endif /* !NDEBUG */
 }
 
 // MARK: Decoding Events
@@ -2010,7 +2058,9 @@ bool sfb::AudioPlayer::processDecoderCanceledEvent() noexcept {
             error = (*iter)->error_;
             framesRendered = (*iter)->framesRendered_.load(std::memory_order_acquire);
 
+#ifndef NDEBUG
             os_log_debug(log_, "Deleting decoder state for %{public}@", (*iter)->decoder_);
+#endif /* !NDEBUG */
             activeDecoders_.erase(iter);
 
             // Wake the decoding thread if a format change is pending or the removal freed a slot that was blocked
@@ -2050,16 +2100,36 @@ bool sfb::AudioPlayer::processDecoderCanceledEvent() noexcept {
         }
     }
 
-    const auto hasNoDecoders = [&]() noexcept {
-        std::scoped_lock lock{queuedDecodersMutex_, activeDecodersMutex_};
-        return queuedDecoders_.empty() && activeDecoders_.empty() && scheduledRenderingCompleteNotifications_ == 0;
-    }();
+    // The decision to stop and the stop itself are made in a single critical section so a decoder enqueued
+    // concurrently is either already present or enqueued after the player has been stopped
+    auto nowPlayingChanged = false;
+    Flags prevFlags{};
+    {
+        std::scoped_lock lock{engineMutex_, queuedDecodersMutex_, activeDecodersMutex_};
 
-    if (hasNoDecoders) {
-        setNowPlayingAndNotifyDelegate(nil);
-        if (const auto wasActive = deactivatePlayerAndStopEngine(); wasActive) {
-            notifyDelegateOfPlaybackStateChange(SFBAudioPlayerPlaybackStateStopped);
+        if (!queuedDecoders_.empty() || !activeDecoders_.empty() || scheduledRenderingCompleteNotifications_ != 0) {
+            return true;
         }
+
+        nowPlayingChanged = setNowPlaying(nil);
+        prevFlags = deactivatePlayerAndStopEngineLocked();
+    }
+
+    // If a format change is pending, wake the decoding thread to reconfigure the processing graph
+    if (bits::is_set(prevFlags, Flags::formatChangePending)) {
+        decodingSemaphore_.signal();
+    }
+
+    // Report the state change before the now playing change so playback restarted from a now playing callback is the
+    // last state reported
+    if (bits::is_set(prevFlags, Flags::active)) {
+        notifyDelegateOfPlaybackStateChange(SFBAudioPlayerPlaybackStateStopped);
+    }
+
+    // Skip the notification if now playing changed again after it was cleared, for example for audio enqueued by
+    // the delegate in response to the playback state change
+    if (nowPlayingChanged && nowPlaying() == nil) {
+        notifyDelegateOfNowPlayingChange(nil);
     }
 
     return true;
@@ -2115,7 +2185,9 @@ bool sfb::AudioPlayer::processRenderingStartedEvent() noexcept {
 
         // Discard stale events from previous playback epochs
         if (playbackGeneration != playbackGeneration_.load(std::memory_order_acquire)) {
+#ifndef NDEBUG
             os_log_debug(log_, "Discarding stale rendering started event");
+#endif /* !NDEBUG */
             return true;
         }
 
@@ -2180,7 +2252,9 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
 
         // Discard stale events from previous playback epochs
         if (playbackGeneration != playbackGeneration_.load(std::memory_order_acquire)) {
+#ifndef NDEBUG
             os_log_debug(log_, "Discarding stale frames rendered event");
+#endif /* !NDEBUG */
             return true;
         }
 
@@ -2231,7 +2305,9 @@ bool sfb::AudioPlayer::processRenderingCompleteEvent() noexcept {
 
         // Discard stale events from previous playback epochs
         if (playbackGeneration != playbackGeneration_.load(std::memory_order_acquire)) {
+#ifndef NDEBUG
             os_log_debug(log_, "Discarding stale rendering complete event");
+#endif /* !NDEBUG */
             return true;
         }
 
@@ -2250,7 +2326,9 @@ bool sfb::AudioPlayer::processRenderingCompleteEvent() noexcept {
             ++scheduledRenderingCompleteNotifications_;
             outputGeneration = outputGeneration_;
 
+#ifndef NDEBUG
             os_log_debug(log_, "Deleting decoder state for %{public}@", (*iter)->decoder_);
+#endif /* !NDEBUG */
             activeDecoders_.erase(iter);
 
             // Wake the decoding thread if the removal freed a slot that was blocked; a pending format change
@@ -2334,7 +2412,9 @@ bool sfb::AudioPlayer::processPauseEngineEvent() noexcept {
         // If weakPlayer is nil it means the SFBAudioPlayer instance was deallocated
         __attribute__((objc_precise_lifetime)) __strong SFBAudioPlayer *player = weakPlayer;
         if (player == nil) {
+#ifndef NDEBUG
             os_log_debug(log_, "Audio player deallocated between pause engine event and sending -pause");
+#endif /* !NDEBUG */
             return;
         }
 
@@ -2381,13 +2461,17 @@ void sfb::AudioPlayer::handleRenderingWillStartEvent(Decoder decoder, uint64_t h
         // If weakPlayer is nil it means the SFBAudioPlayer instance was deallocated
         __attribute__((objc_precise_lifetime)) __strong SFBAudioPlayer *player = weakPlayer;
         if (player == nil) {
+#ifndef NDEBUG
             os_log_debug(log_, "Audio player deallocated between rendering will start event and rendering started "
                                "notification");
+#endif /* !NDEBUG */
             return;
         }
 
         if (NSNumber *isCanceled = objc_getAssociatedObject(decoder, &decoderIsCanceledKey); isCanceled.boolValue) {
+#ifndef NDEBUG
             os_log_debug(log_, "%{public}@ canceled after rendering will start event", decoder);
+#endif /* !NDEBUG */
             return;
         }
 
@@ -2399,7 +2483,9 @@ void sfb::AudioPlayer::handleRenderingWillStartEvent(Decoder decoder, uint64_t h
         {
             std::lock_guard lock{that->activeDecodersMutex_};
             if (outputGeneration != that->outputGeneration_) {
+#ifndef NDEBUG
                 os_log_debug(log_, "Ignoring stale rendering started notification for %{public}@", decoder);
+#endif /* !NDEBUG */
                 return;
             }
             // Update now playing while holding the lock so a concurrent stop either invalidates this notification
@@ -2463,8 +2549,10 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
         // If weakPlayer is nil it means the owning SFBAudioPlayer instance was deallocated
         __attribute__((objc_precise_lifetime)) __strong SFBAudioPlayer *player = weakPlayer;
         if (player == nil) {
+#ifndef NDEBUG
             os_log_debug(log_, "Audio player deallocated between rendering will complete event and rendering "
                                "complete notification");
+#endif /* !NDEBUG */
             return;
         }
 
@@ -2476,7 +2564,9 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
             std::lock_guard lock{that->activeDecodersMutex_};
             // Notifications from earlier output epochs become stale when the engine stops
             if (outputGeneration != that->outputGeneration_) {
+#ifndef NDEBUG
                 os_log_debug(log_, "Ignoring stale rendering complete notification for %{public}@", decoder);
+#endif /* !NDEBUG */
                 return;
             }
             assert(that->scheduledRenderingCompleteNotifications_ > 0);
@@ -2490,7 +2580,9 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
         }
 
         if (NSNumber *isCanceled = objc_getAssociatedObject(decoder, &decoderIsCanceledKey); isCanceled.boolValue) {
+#ifndef NDEBUG
             os_log_debug(log_, "%{public}@ canceled after rendering will complete event", decoder);
+#endif /* !NDEBUG */
             return;
         }
 
@@ -2510,34 +2602,42 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
             [delegate audioPlayer:player renderingComplete:decoder];
         }
 
-        const auto hasNoDecoders = [&]() noexcept {
-            std::scoped_lock lock{that->queuedDecodersMutex_, that->activeDecodersMutex_};
-            return that->queuedDecoders_.empty() && that->activeDecoders_.empty() &&
-                   that->scheduledRenderingCompleteNotifications_ == 0;
-        }();
+        // The end of audio detection and action are combined in a single critical section. A decoder enqueued
+        // concurrently is thus either already present, in which case playback continues, or enqueued after the action
+        // has been performed. Otherwise the action could stop or pause the new decoder's playback and now playing
+        // could be cleared after the new decoder started rendering.
+        //
+        // The action is performed before the now playing and end of audio notifications because a delegate may
+        // enqueue or play audio in response to a notification.
+        auto wasActive = false;
+        std::optional<SFBAudioPlayerPlaybackState> playbackState;
+        auto nowPlayingChanged = false;
+        Flags prevFlags{};
+        {
+            std::scoped_lock lock{that->engineMutex_, that->queuedDecodersMutex_, that->activeDecodersMutex_};
 
-        // End of audio
-        if (hasNoDecoders) {
-#ifndef NDEBUG
-            os_log_debug(log_, "End of audio reached");
-#endif /* !NDEBUG */
+            if (!that->queuedDecoders_.empty() || !that->activeDecoders_.empty() ||
+                that->scheduledRenderingCompleteNotifications_ != 0) {
+                return;
+            }
 
             // The end of audio action is only performed if the player was not stopped while the audio was playing
-            const auto wasActive = bits::is_set(that->loadFlags(), Flags::active);
+            wasActive = bits::is_set(that->loadFlags(), Flags::active);
 
-            // Perform the action before the now playing and end of audio notifications. The end of audio decision
-            // reflects the decoders present when it was made, and a delegate may enqueue or play audio in response to
-            // a notification; performing the action afterward could stop or pause that playback.
             if (wasActive) {
+#ifndef NDEBUG
+                os_log_debug(log_, "End of audio reached");
+#endif /* !NDEBUG */
                 const auto action = that->endOfAudioAction();
                 switch (action) {
                 case SFBAudioPlayerEndOfAudioActionStop:
-                    if (that->deactivatePlayerAndStopEngine()) {
-                        that->notifyDelegateOfPlaybackStateChange(SFBAudioPlayerPlaybackStateStopped);
-                    }
+                    prevFlags = that->deactivatePlayerAndStopEngineLocked();
+                    playbackState = SFBAudioPlayerPlaybackStateStopped;
                     break;
                 case SFBAudioPlayerEndOfAudioActionPause:
-                    that->pause();
+                    if (that->pauseLocked()) {
+                        playbackState = SFBAudioPlayerPlaybackStatePaused;
+                    }
                     break;
                 case SFBAudioPlayerEndOfAudioActionContinue:
                     // The playback session remains active so audio enqueued later plays without a call to -play
@@ -2546,24 +2646,38 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
                     assert(false && "Unknown SFBAudioPlayerEndOfAudioAction");
                     os_log_error(log_, "Unknown end of audio action: %ld; stopping playback",
                                  static_cast<long>(action));
-                    if (that->deactivatePlayerAndStopEngine()) {
-                        that->notifyDelegateOfPlaybackStateChange(SFBAudioPlayerPlaybackStateStopped);
-                    }
+                    prevFlags = that->deactivatePlayerAndStopEngineLocked();
+                    playbackState = SFBAudioPlayerPlaybackStateStopped;
                     break;
                 }
             }
 
-            that->setNowPlayingAndNotifyDelegate(nil);
+            nowPlayingChanged = that->setNowPlaying(nil);
+        }
 
-            // Nothing more to do if the player was stopped while the audio was playing
-            if (!wasActive) {
-                return;
-            }
+        // If a format change is pending, wake the decoding thread to reconfigure the processing graph
+        if (bits::is_set(prevFlags, Flags::formatChangePending)) {
+            that->decodingSemaphore_.signal();
+        }
 
-            if (__strong id<SFBAudioPlayerDelegate> delegate = player.delegate;
-                delegate != nil && [delegate respondsToSelector:@selector(audioPlayerEndOfAudio:)]) {
-                [delegate audioPlayerEndOfAudio:player];
-            }
+        if (playbackState.has_value()) {
+            that->notifyDelegateOfPlaybackStateChange(playbackState.value());
+        }
+
+        // Skip the notification if now playing changed again after it was cleared, for example for audio enqueued by
+        // the delegate in response to the playback state change
+        if (nowPlayingChanged && that->nowPlaying() == nil) {
+            that->notifyDelegateOfNowPlayingChange(nil);
+        }
+
+        // Nothing more to do if the player was stopped while the audio was playing
+        if (!wasActive) {
+            return;
+        }
+
+        if (__strong id<SFBAudioPlayerDelegate> delegate = player.delegate;
+            delegate != nil && [delegate respondsToSelector:@selector(audioPlayerEndOfAudio:)]) {
+            [delegate audioPlayerEndOfAudio:player];
         }
     });
 
@@ -2694,7 +2808,9 @@ void sfb::AudioPlayer::handleAudioEngineConfigurationChange(AVAudioEngine *engin
     // Keep the owning SFBAudioPlayer alive until this handler returns
     __attribute__((objc_precise_lifetime)) __strong SFBAudioPlayer *player = player_;
     if (player == nil) {
+#ifndef NDEBUG
         os_log_debug(log_, "Ignoring AVAudioEngineConfigurationChangeNotification for deallocated audio player");
+#endif /* !NDEBUG */
         return;
     }
 
@@ -2705,7 +2821,9 @@ void sfb::AudioPlayer::handleAudioEngineConfigurationChange(AVAudioEngine *engin
     }
 
     // AVAudioEngine posts this notification from a dedicated internal dispatch queue
+#ifndef NDEBUG
     os_log_debug(log_, "Received AVAudioEngineConfigurationChangeNotification");
+#endif /* !NDEBUG */
 
     // The output hardware’s channel count or sample rate changed
     {
@@ -2793,14 +2911,18 @@ void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) no
     // Keep the owning SFBAudioPlayer alive until this handler returns
     __attribute__((objc_precise_lifetime)) __strong SFBAudioPlayer *player = player_;
     if (player == nil) {
+#ifndef NDEBUG
         os_log_debug(log_, "Ignoring AVAudioSessionInterruptionNotification for deallocated audio player");
+#endif /* !NDEBUG */
         return;
     }
 
     const auto interruptionType = [[userInfo objectForKey:AVAudioSessionInterruptionTypeKey] unsignedIntegerValue];
     switch (interruptionType) {
     case AVAudioSessionInterruptionTypeBegan: {
+#ifndef NDEBUG
         os_log_debug(log_, "Received AVAudioSessionInterruptionNotification (AVAudioSessionInterruptionTypeBegan)");
+#endif /* !NDEBUG */
 
         // The system stops the AVAudioEngine when an interruption begins, but the notification can arrive late
         // (for example after the app was suspended) while the engine is still running, so stop it explicitly.
@@ -2827,7 +2949,9 @@ void sfb::AudioPlayer::handleAudioSessionInterruption(NSDictionary *userInfo) no
     }
 
     case AVAudioSessionInterruptionTypeEnded: {
+#ifndef NDEBUG
         os_log_debug(log_, "Received AVAudioSessionInterruptionNotification (AVAudioSessionInterruptionTypeEnded)");
+#endif /* !NDEBUG */
 
         if (__strong id<SFBAudioPlayerDelegate> delegate = player.delegate;
             delegate != nil && [delegate respondsToSelector:@selector(audioPlayer:audioSessionInterruption:)]) {
@@ -2922,20 +3046,7 @@ bool sfb::AudioPlayer::deactivatePlayerAndStopEngine() noexcept {
         // Stopping the engine discards inflight audio. Both locks are held so a concurrent -play cannot restart
         // the engine and schedule notifications for a new session before they are invalidated.
         std::scoped_lock lock{engineMutex_, activeDecodersMutex_};
-
-        prevFlags = clearFlags(Flags::active | Flags::playing);
-        [engine_ stop];
-#if TARGET_OS_IPHONE
-        wasPlayingBeforeInterruption_ = false;
-#endif /* TARGET_OS_IPHONE */
-
-        // Expire render events queued before the engine stopped so they cannot schedule notifications for
-        // discarded audio
-        playbackGeneration_.fetch_add(1, std::memory_order_release);
-
-        // Mark scheduled rendering notifications as stale
-        ++outputGeneration_;
-        scheduledRenderingCompleteNotifications_ = 0;
+        prevFlags = deactivatePlayerAndStopEngineLocked();
     }
 
     // If a format change is pending, wake the decoding thread to reconfigure the processing graph
@@ -2946,7 +3057,33 @@ bool sfb::AudioPlayer::deactivatePlayerAndStopEngine() noexcept {
     return bits::is_set(prevFlags, Flags::active);
 }
 
+auto sfb::AudioPlayer::deactivatePlayerAndStopEngineLocked() noexcept -> Flags {
+#ifndef NDEBUG
+    engineMutex_.assertIsOwner();
+    activeDecodersMutex_.assertIsOwner();
+#endif /* !NDEBUG */
+
+    const auto prevFlags = clearFlags(Flags::active | Flags::playing);
+    [engine_ stop];
+#if TARGET_OS_IPHONE
+    wasPlayingBeforeInterruption_ = false;
+#endif /* TARGET_OS_IPHONE */
+
+    // Expire render events queued before the engine stopped so they cannot schedule notifications for
+    // discarded audio
+    playbackGeneration_.fetch_add(1, std::memory_order_release);
+
+    // Mark scheduled rendering notifications as stale
+    ++outputGeneration_;
+    scheduledRenderingCompleteNotifications_ = 0;
+
+    return prevFlags;
+}
+
 void sfb::AudioPlayer::notifyDelegateOfPlaybackStateChange(SFBAudioPlayerPlaybackState playbackState) noexcept {
+#ifndef NDEBUG
+    os_log_debug(log_, "Playback state changed to %{public}s", playbackStateDescription(playbackState));
+#endif /* !NDEBUG */
     if (__strong SFBAudioPlayer *player = player_; player != nil) {
         if (__strong id<SFBAudioPlayerDelegate> delegate = player.delegate;
             delegate != nil && [delegate respondsToSelector:@selector(audioPlayer:playbackStateChanged:)]) {
@@ -2962,7 +3099,9 @@ bool sfb::AudioPlayer::configureProcessingGraphAndRingBufferForFormat(AVAudioFor
     assert(format.isStandard);
     assert(![[sourceNode_ outputFormatForBus:0] isEqual:format]);
 
+#ifndef NDEBUG
     os_log_debug(log_, "Reconfiguring audio processing graph for %{public}@", stringDescribingAVAudioFormat(format));
+#endif /* !NDEBUG */
 
     // Allocate a temporary ring buffer for the new format before touching the engine or graph
     spsc::AudioRingBuffer ringBuffer;
