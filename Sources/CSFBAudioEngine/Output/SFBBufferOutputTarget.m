@@ -51,7 +51,7 @@
     size_t bytesAvailable = _capacity - _pos;
     if (bytesAvailable == 0) {
         if (error) {
-            *error = [self posixErrorWithCode:ENOSPC];
+            *error = [self posixErrorWithCode:EINVAL];
         }
         return NO;
     }
@@ -75,7 +75,7 @@
     size_t remainingCapacity = _capacity - _pos;
     if (remainingCapacity == 0) {
         if (error) {
-            *error = [self posixErrorWithCode:EINVAL];
+            *error = [self posixErrorWithCode:ENOSPC];
         }
         return NO;
     }
