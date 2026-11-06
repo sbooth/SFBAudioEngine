@@ -383,7 +383,7 @@ class AudioPlayer final {
     /// - important: The caller must hold `engineMutex_`
     /// - parameter error: An optional pointer to an `NSError` object to receive error information
     /// - returns: `true` if the engine is running
-    bool startEngine(NSError **error) noexcept;
+    bool startEngineLocked(NSError **error) noexcept;
 
     /// Notifies the delegate of an engine start failure and a playback state change if needed
     void notifyDelegateOfEngineStartFailure(NSError *_Nullable error, bool wasPlaying) noexcept;
@@ -392,6 +392,18 @@ class AudioPlayer final {
     /// - note: The caller is responsible for clearing the decoder queue and canceling active decoders if desired
     /// - returns: `true` if the player was active
     bool deactivatePlayerAndStopEngine() noexcept;
+
+    /// Starts the engine if needed and begins or resumes playback
+    /// - important: The caller must hold `engineMutex_`
+    /// - precondition: The player is not playing
+    /// - parameter error: An optional pointer to an `NSError` object to receive error information
+    /// - returns: `true` if the player is playing, or `false` if the engine could not be started
+    bool playLocked(NSError **error) noexcept;
+
+    /// Pauses playback and requests that the engine be paused
+    /// - important: The caller must hold `engineMutex_`
+    /// - returns: `true` if the player was playing
+    bool pauseLocked() noexcept;
 
     /// Notifies the delegate of a playback state change
     void notifyDelegateOfPlaybackStateChange(SFBAudioPlayerPlaybackState playbackState) noexcept;
