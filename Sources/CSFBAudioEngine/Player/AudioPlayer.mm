@@ -724,10 +724,10 @@ bool sfb::AudioPlayer::play(NSError **error) noexcept {
 }
 
 bool sfb::AudioPlayer::playLocked(NSError **error) noexcept {
-#if DEBUG
+#ifndef NDEBUG
     engineMutex_.assertIsOwner();
+#endif /* !NDEBUG */
     assert(bits::is_clear(loadFlags(), Flags::playing));
-#endif /* DEBUG */
 
     // Publish the new state only once the engine is running so a failed start has no visible effect
     if (!startEngineLocked(error)) {
@@ -754,9 +754,9 @@ void sfb::AudioPlayer::pause() noexcept {
 }
 
 bool sfb::AudioPlayer::pauseLocked() noexcept {
-#if DEBUG
+#ifndef NDEBUG
     engineMutex_.assertIsOwner();
-#endif /* DEBUG */
+#endif /* !NDEBUG */
 
     if (bits::is_clear(loadFlags(), Flags::active)) {
         return false;
