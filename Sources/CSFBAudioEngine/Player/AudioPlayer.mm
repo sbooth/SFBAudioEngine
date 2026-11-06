@@ -2071,12 +2071,16 @@ bool sfb::AudioPlayer::processDecoderCanceledEvent() noexcept {
         decodingSemaphore_.signal();
     }
 
-    if (nowPlayingChanged) {
-        notifyDelegateOfNowPlayingChange(nil);
-    }
-
+    // Report the state change before the now playing change so playback restarted from a now playing callback is the
+    // last state reported
     if (bits::is_set(prevFlags, Flags::active)) {
         notifyDelegateOfPlaybackStateChange(SFBAudioPlayerPlaybackStateStopped);
+    }
+
+    // Skip the notification if now playing changed again after it was cleared, for example for audio enqueued by
+    // the delegate in response to the playback state change
+    if (nowPlayingChanged && nowPlaying() == nil) {
+        notifyDelegateOfNowPlayingChange(nil);
     }
 
     return true;
@@ -2590,7 +2594,9 @@ void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_
             that->notifyDelegateOfPlaybackStateChange(playbackState.value());
         }
 
-        if (nowPlayingChanged) {
+        // Skip the notification if now playing changed again after it was cleared, for example for audio enqueued by
+        // the delegate in response to the playback state change
+        if (nowPlayingChanged && that->nowPlaying() == nil) {
             that->notifyDelegateOfNowPlayingChange(nil);
         }
 
