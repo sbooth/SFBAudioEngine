@@ -1835,9 +1835,11 @@ bool sfb::AudioPlayer::enqueueFramesRenderedEvents(uint32_t framesRead, const Au
         const auto eventTime = hostTimeForFrameOffset(frameOffset, timestamp, sampleRate);
         const auto completionTime =
                 isFinal ? hostTimeForFrameOffset(frameOffset + chunkFramesConsumed, timestamp, sampleRate) : 0;
-        if (!events_.enqueue(EventCommand::framesRendered, chunkSequenceNumber, chunkFramesConsumed,
-                             renderingChunk_->descriptor_.playbackGeneration_, eventTime, completionTime, isFinal))
-                [[unlikely]] {
+        if (events_.enqueue(EventCommand::framesRendered, chunkSequenceNumber, chunkFramesConsumed,
+                            renderingChunk_->descriptor_.playbackGeneration_, eventTime, completionTime, isFinal))
+                [[likely]] {
+            eventEnqueued = true;
+        } else {
             setFlags(Flags::renderEventDropped);
         }
 
@@ -1867,8 +1869,10 @@ bool sfb::AudioPlayer::enqueueEmptyFramesRenderedEvent(const AudioTimeStamp &tim
 
         // Rendering is complete
         const auto eventTime = hostTimeForFrameOffset(0, timestamp, audioBuffer_.format().mSampleRate);
-        if (!events_.enqueue(EventCommand::framesRendered, chunkDescriptor.sequenceNumber_, uint32_t{0},
-                             chunkDescriptor.playbackGeneration_, eventTime, eventTime, true)) [[unlikely]] {
+        if (events_.enqueue(EventCommand::framesRendered, chunkDescriptor.sequenceNumber_, uint32_t{0},
+                            chunkDescriptor.playbackGeneration_, eventTime, eventTime, true)) [[likely]] {
+            eventEnqueued = true;
+        } else {
             setFlags(Flags::renderEventDropped);
         }
 
