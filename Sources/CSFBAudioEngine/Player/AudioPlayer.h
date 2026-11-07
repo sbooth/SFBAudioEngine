@@ -530,11 +530,10 @@ class AudioPlayer final {
     bool processPauseEngineEvent() noexcept;
 
     /// Called when the first audio frame from a decoder will render.
-    void handleRenderingWillStartEvent(Decoder _Nonnull decoder, uint64_t hostTime, uint64_t outputGeneration) noexcept;
+    void handleRenderingWillStart(Decoder _Nonnull decoder, uint64_t hostTime, uint64_t outputGeneration) noexcept;
 
     /// Called when the final audio frame from a decoder will render.
-    void handleRenderingWillCompleteEvent(Decoder _Nonnull decoder, uint64_t hostTime,
-                                          uint64_t outputGeneration) noexcept;
+    void handleRenderingWillComplete(Decoder _Nonnull decoder, uint64_t hostTime, uint64_t outputGeneration) noexcept;
 
     // MARK: - Transport Snapshots
 

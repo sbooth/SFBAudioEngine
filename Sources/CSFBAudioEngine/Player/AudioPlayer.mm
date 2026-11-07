@@ -2261,11 +2261,11 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
     }
 
     if (startedDecoder != nil) {
-        handleRenderingWillStartEvent(startedDecoder, eventTime, outputGeneration);
+        handleRenderingWillStart(startedDecoder, eventTime, outputGeneration);
     }
 
     if (completedDecoder != nil) {
-        handleRenderingWillCompleteEvent(completedDecoder, completionTime, outputGeneration);
+        handleRenderingWillComplete(completedDecoder, completionTime, outputGeneration);
     }
 
     return true;
@@ -2349,8 +2349,8 @@ bool sfb::AudioPlayer::processPauseEngineEvent() noexcept {
     return true;
 }
 
-void sfb::AudioPlayer::handleRenderingWillStartEvent(Decoder decoder, uint64_t hostTime,
-                                                     uint64_t outputGeneration) noexcept {
+void sfb::AudioPlayer::handleRenderingWillStart(Decoder decoder, uint64_t hostTime,
+                                                uint64_t outputGeneration) noexcept {
     // Add the downstream presentation latency to determine when the audio should reach the device
     hostTime += hostTimeDeltaForSeconds(sourceNode_.outputPresentationLatency);
 
@@ -2437,8 +2437,8 @@ void sfb::AudioPlayer::handleRenderingWillStartEvent(Decoder decoder, uint64_t h
     }
 }
 
-void sfb::AudioPlayer::handleRenderingWillCompleteEvent(Decoder decoder, uint64_t hostTime,
-                                                        uint64_t outputGeneration) noexcept {
+void sfb::AudioPlayer::handleRenderingWillComplete(Decoder decoder, uint64_t hostTime,
+                                                   uint64_t outputGeneration) noexcept {
     // Add the downstream presentation latency to determine when the audio should reach the device
     hostTime += hostTimeDeltaForSeconds(sourceNode_.outputPresentationLatency);
 
