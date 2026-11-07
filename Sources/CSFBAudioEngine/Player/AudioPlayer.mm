@@ -1022,6 +1022,7 @@ AUAudioObjectID sfb::AudioPlayer::outputDeviceID() const noexcept { return engin
 bool sfb::AudioPlayer::setOutputDeviceID(AUAudioObjectID outputDeviceID, NSError **error) noexcept {
     os_log_info(log_, "Setting <AudioPlayer: %p> output device to 0x%x", this, outputDeviceID);
 
+    std::lock_guard lock{engineMutex_};
     if (NSError *err = nil; ![engine_.outputNode.AUAudioUnit setDeviceID:outputDeviceID error:&err]) {
         os_log_error(log_, "Error setting output device: %{public}@", err);
         if (error != nullptr) {
