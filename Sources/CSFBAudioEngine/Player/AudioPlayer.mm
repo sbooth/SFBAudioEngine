@@ -2352,6 +2352,8 @@ bool sfb::AudioPlayer::processPauseEngineEvent() noexcept {
 
 void sfb::AudioPlayer::handleRenderingWillStart(Decoder decoder, uint64_t hostTime,
                                                 uint64_t outputGeneration) noexcept {
+    assert(decoder != nil);
+
     // Add the downstream presentation latency to determine when the audio should reach the device
     hostTime += hostTimeDeltaForSeconds(sourceNode_.outputPresentationLatency);
 
@@ -2440,6 +2442,8 @@ void sfb::AudioPlayer::handleRenderingWillStart(Decoder decoder, uint64_t hostTi
 
 void sfb::AudioPlayer::handleRenderingWillComplete(Decoder decoder, uint64_t hostTime,
                                                    uint64_t outputGeneration) noexcept {
+    assert(decoder != nil);
+
     // Add the downstream presentation latency to determine when the audio should reach the device
     hostTime += hostTimeDeltaForSeconds(sourceNode_.outputPresentationLatency);
 
