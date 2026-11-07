@@ -211,7 +211,7 @@ bool isSnapshotSeekable(const sfb::detail::TransportSnapshot &snapshot) noexcept
         return false;
     }
     return snapshot.framePosition_ != SFBUnknownFramePosition && snapshot.frameLength_ != SFBUnknownFrameLength &&
-           snapshot.frameLength_ >= 1;
+           snapshot.frameLength_ >= 1 && snapshot.framePosition_ < snapshot.frameLength_;
 }
 
 /// Computes the host time for a given frame offset relative to `timestamp` at `sampleRate`
