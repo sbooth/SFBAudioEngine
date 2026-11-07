@@ -1265,14 +1265,14 @@ bool sfb::AudioPlayer::processPendingSeek(bool &formatMismatch) noexcept {
     const auto framePosition = decoderState->framesDecoded();
     decoderState->framesRendered_.store(framePosition, std::memory_order_release);
 
+    // Clear the pending seek if it hasn't been replaced by a newer seek request
+    pendingSeek_.compare_exchange_strong(pendingSeek, {}, std::memory_order_acq_rel, std::memory_order_relaxed);
+
     if (events_.enqueue(EventCommand::seekComplete, decoderState->sequenceNumber_, framePosition)) [[likely]] {
         eventSemaphore_.signal();
     } else {
         os_log_fault(log_, "Error writing seek complete event");
     }
-
-    // Clear the pending seek if it hasn't been replaced by a newer seek request
-    pendingSeek_.compare_exchange_strong(pendingSeek, {}, std::memory_order_acq_rel, std::memory_order_relaxed);
 
     if (bits::is_set(decoderState->loadFlags(), DecoderState::Flags::decodingComplete)) {
 #ifndef NDEBUG
@@ -2226,7 +2226,7 @@ bool sfb::AudioPlayer::processRenderingStartedEvent() noexcept {
             // continues.
             if (bits::is_set(decoderFlags, DecoderState::Flags::renderingStarted)) {
 #ifndef NDEBUG
-                os_log_debug(log_, "Rendering continuing after discarded audio for %{public}@", (*iter)->decoder_);
+                os_log_debug(log_, "Rendering continuing for %{public}@", (*iter)->decoder_);
 #endif /* !NDEBUG */
                 publishTransportSnapshot((*iter)->snapshot());
                 return true;
