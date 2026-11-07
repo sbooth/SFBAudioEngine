@@ -457,11 +457,11 @@ class AudioPlayer final {
     /// Returns the appropriate decoding semaphore timeout
     std::chrono::nanoseconds decodingTimeout(DecoderState *_Nullable decoderState) const noexcept;
 
-#if DEBUG
+#ifndef NDEBUG
     /// Returns `true` if the decoding thread has a decoder to process and should not be idle
     /// - note: Used only to detect missed signals when a wait with no decoder to process times out
     bool shouldBeProcessingDecoders() const noexcept;
-#endif /* DEBUG */
+#endif /* !NDEBUG */
 
     // MARK: - Rendering
 
