@@ -1160,11 +1160,11 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
         // Wait for an event signal; ring buffer space availability is polled using the timeout
         const auto timeout = decodingTimeout(decoderState);
         [[maybe_unused]] const auto result = decodingSemaphore_.wait(timeout);
-#if DEBUG
+#ifndef NDEBUG
         if (!result && decoderState == nullptr && shouldBeProcessingDecoders()) [[unlikely]] {
             os_log_debug(log_, "Decoding thread woke on timeout with decoder to process: possible missed signal");
         }
-#endif /* DEBUG */
+#endif /* !NDEBUG */
     }
 
 #ifndef NDEBUG
@@ -1671,7 +1671,7 @@ std::chrono::nanoseconds sfb::AudioPlayer::decodingTimeout(DecoderState *decoder
     return std::chrono::duration_cast<std::chrono::nanoseconds>(duration);
 }
 
-#if DEBUG
+#ifndef NDEBUG
 bool sfb::AudioPlayer::shouldBeProcessingDecoders() const noexcept {
     const auto flags = loadFlags();
 
@@ -1699,7 +1699,7 @@ bool sfb::AudioPlayer::shouldBeProcessingDecoders() const noexcept {
                               DecoderState::Flags::canceled | DecoderState::Flags::decodingComplete);
     });
 }
-#endif /* DEBUG */
+#endif /* !NDEBUG */
 
 // MARK: - Rendering
 
@@ -1972,12 +1972,12 @@ void sfb::AudioPlayer::processEvents(std::stop_token stoken) noexcept {
 
         // Wait for an event; the timeout is protection against a missed signal
         [[maybe_unused]] const auto result = eventSemaphore_.wait(5s);
-#if DEBUG
+#ifndef NDEBUG
         if (!result && !events_.isEmpty()) [[unlikely]] {
             // If an event is enqueued just as the wait times out the message will still be logged, hence "possible"
             os_log_debug(log_, "Event processing thread woke on timeout with events pending: possible missed signal");
         }
-#endif /* DEBUG */
+#endif /* !NDEBUG */
     }
 
 #ifndef NDEBUG
