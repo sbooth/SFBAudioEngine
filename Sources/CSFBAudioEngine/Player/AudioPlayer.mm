@@ -707,7 +707,9 @@ bool sfb::AudioPlayer::enqueueDecoder(Decoder decoder, bool forImmediatePlayback
         return false;
     }
 
-    os_log_info(log_, "Enqueued %{public}@", decoder);
+#ifndef NDEBUG
+    os_log_debug(log_, "Enqueued %{public}@", decoder);
+#endif /* !NDEBUG */
 
     if (forImmediatePlayback) {
         cancelActiveDecoders();
