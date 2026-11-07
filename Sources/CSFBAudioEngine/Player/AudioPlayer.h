@@ -150,12 +150,15 @@ class AudioPlayer final {
     /// Thread used for decoding
     std::jthread decodingThread_;
     /// Semaphore used for communication with the decoding thread
-    dsema::Semaphore decodingSemaphore_{0};
+    msema::Semaphore decodingSemaphore_{0};
 
     /// Thread used for event processing
     std::jthread eventThread_;
     /// Semaphore used for communication with the event processing thread
-    dsema::Semaphore eventSemaphore_{0};
+    msema::Semaphore eventSemaphore_{0};
+    /// Whether `eventSemaphore_` has been signaled since the event processing thread last began draining events
+    std::atomic_bool eventSignaled_{false};
+    static_assert(std::atomic_bool::is_always_lock_free, "Lock-free std::atomic_bool required");
 
     /// Message queue communicating events to the event processing thread
     mpsc::MessageQueue<256, 32> events_;
@@ -454,6 +457,12 @@ class AudioPlayer final {
     /// Returns the appropriate decoding semaphore timeout
     std::chrono::nanoseconds decodingTimeout(DecoderState *_Nullable decoderState) const noexcept;
 
+#ifndef NDEBUG
+    /// Returns `true` if the decoding thread has a decoder to process and should not be idle
+    /// - note: Used only to detect missed signals when a wait with no decoder to process times out
+    bool shouldBeProcessingDecoders() const noexcept;
+#endif /* !NDEBUG */
+
     // MARK: - Rendering
 
     /// Render block implementation
@@ -461,10 +470,12 @@ class AudioPlayer final {
                     AudioBufferList &outputData) noexcept;
 
     /// Enqueues frames rendered event(s) for rendered audio
-    void enqueueFramesRenderedEvents(uint32_t framesRead, const AudioTimeStamp &timestamp) noexcept;
+    /// - returns: `true` if an event was enqueued
+    [[nodiscard]] bool enqueueFramesRenderedEvents(uint32_t framesRead, const AudioTimeStamp &timestamp) noexcept;
 
     /// Enqueues an empty frames rendered event if an empty decoded chunk descriptor is present
-    void enqueueEmptyFramesRenderedEvent(const AudioTimeStamp &timestamp) noexcept;
+    /// - returns: `true` if an event was enqueued
+    [[nodiscard]] bool enqueueEmptyFramesRenderedEvent(const AudioTimeStamp &timestamp) noexcept;
 
     /// The current rendering chunk descriptor
     std::optional<detail::RenderingChunkDescriptor> renderingChunk_{};
@@ -548,6 +559,9 @@ class AudioPlayer final {
     /// Called when the final audio frame from a decoder will render.
     void handleRenderingWillCompleteEvent(Decoder _Nonnull decoder, uint64_t hostTime,
                                           uint64_t outputGeneration) noexcept;
+
+    /// Signals the event semaphore if required
+    void signalEventSemaphore() noexcept;
 
     // MARK: - Transport Snapshots
 
@@ -673,6 +687,12 @@ inline AVAudioSourceNode *_Nonnull AudioPlayer::sourceNode() const noexcept { re
 inline AVAudioMixerNode *_Nonnull AudioPlayer::mainMixerNode() const noexcept { return engine_.mainMixerNode; }
 
 inline AVAudioOutputNode *_Nonnull AudioPlayer::outputNode() const noexcept { return engine_.outputNode; }
+
+inline void AudioPlayer::signalEventSemaphore() noexcept {
+    if (!eventSignaled_.exchange(true, std::memory_order_acq_rel)) {
+        eventSemaphore_.signal();
+    }
+}
 
 // MARK: Transport Snapshot
 
