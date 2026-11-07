@@ -2222,7 +2222,7 @@ bool sfb::AudioPlayer::processRenderingStartedEvent() noexcept {
             // If a decoder finishes rendering while a seek on it is in progress, the seek expires the rendering
             // complete event, and after the seek the decoder is reported as starting again.
             if (bits::is_set(decoderFlags, DecoderState::Flags::renderingStarted)) {
-                // Only possible if the seek cause decoding to resume
+                // Only possible if the seek caused decoding to resume
                 assert(bits::is_set(decoderFlags, DecoderState::Flags::decodingResumed));
 #ifndef NDEBUG
                 os_log_debug(log_, "Rendering restarted after seeking for %{public}@", (*iter)->decoder_);
