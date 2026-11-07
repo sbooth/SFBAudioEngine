@@ -1255,6 +1255,7 @@ bool sfb::AudioPlayer::processPendingSeek(bool &formatMismatch) noexcept {
         decoderState->error_ = seekError;
         decoderState->setFlags(DecoderState::Flags::cancelRequested);
         pendingSeek_.compare_exchange_strong(pendingSeek, {}, std::memory_order_acq_rel, std::memory_order_relaxed);
+        suspendAndRewindDecodersFollowing(decoderState->sequenceNumber_);
         return false;
     }
 
