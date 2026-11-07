@@ -2225,7 +2225,6 @@ bool sfb::AudioPlayer::processRenderingStartedEvent() noexcept {
             // from the same decoder after a seek. If the decoder had already started rendering, rendering simply
             // continues.
             if (bits::is_set(decoderFlags, DecoderState::Flags::renderingStarted)) {
-                // Only possible if the seek caused decoding to resume
 #ifndef NDEBUG
                 os_log_debug(log_, "Rendering continuing after discarded audio for %{public}@", (*iter)->decoder_);
 #endif /* !NDEBUG */
