@@ -2206,11 +2206,20 @@ bool sfb::AudioPlayer::processRenderingStartedEvent() noexcept {
 
         if (const auto iter = std::ranges::find(activeDecoders_, sequenceNumber, &DecoderState::sequenceNumber_);
             iter != activeDecoders_.cend()) {
-#ifndef NDEBUG
             const auto decoderFlags = (*iter)->loadFlags();
             assert(bits::is_set(decoderFlags, DecoderState::Flags::decodingStarted));
-            assert(bits::is_clear(decoderFlags, DecoderState::Flags::renderingStarted));
+
+            // If a decoder finishes rendering while a seek on it is in progress, the seek expires the rendering
+            // complete event, and after the seek the decoder is reported as starting again.
+            if (bits::is_set(decoderFlags, DecoderState::Flags::renderingStarted)) {
+                // Only possible if the seek cause decoding to resume
+                assert(bits::is_set(decoderFlags, DecoderState::Flags::decodingResumed));
+#ifndef NDEBUG
+                os_log_debug(log_, "Rendering restarted after seeking for %{public}@", (*iter)->decoder_);
 #endif /* !NDEBUG */
+                publishTransportSnapshot((*iter)->snapshot());
+                return true;
+            }
 
             (*iter)->setFlags(DecoderState::Flags::renderingStarted);
             publishTransportSnapshot((*iter)->snapshot());
