@@ -469,7 +469,7 @@ class AudioPlayer final {
     /// The current rendering chunk descriptor
     std::optional<detail::RenderingChunkDescriptor> renderingChunk_{};
 
-    /// The sequence number of the decoder that produced the most recently rendered chunk
+    /// The sequence number of the decoder that produced the most recently rendered chunk, or 0 if none
     uint64_t lastRenderedSequenceNumber_{0};
 
     /// The host time of the last ring buffer underrun

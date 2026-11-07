@@ -1554,6 +1554,7 @@ bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *&decoderState, AVAudio
         audioBuffer_.discardAll();
         audioMetadata_.discardAll();
         renderingChunk_ = {};
+        lastRenderedSequenceNumber_ = 0;
         clearFlags(Flags::audioStale);
     }
 
@@ -1696,6 +1697,7 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
         audioBuffer_.discardAll();
         audioMetadata_.discardAll();
         renderingChunk_ = {};
+        lastRenderedSequenceNumber_ = 0;
         clearFlags(Flags::audioStale);
     }
 
@@ -2219,13 +2221,13 @@ bool sfb::AudioPlayer::processRenderingStartedEvent() noexcept {
             const auto decoderFlags = (*iter)->loadFlags();
             assert(bits::is_set(decoderFlags, DecoderState::Flags::decodingStarted));
 
-            // If a decoder finishes rendering while a seek on it is in progress, the seek expires the rendering
-            // complete event, and after the seek the decoder is reported as starting again.
+            // After stale audio is discarded the render block reports rendering started for the next chunk, which is
+            // from the same decoder after a seek. If the decoder had already started rendering, rendering simply
+            // continues.
             if (bits::is_set(decoderFlags, DecoderState::Flags::renderingStarted)) {
                 // Only possible if the seek caused decoding to resume
-                assert(bits::is_set(decoderFlags, DecoderState::Flags::decodingResumed));
 #ifndef NDEBUG
-                os_log_debug(log_, "Rendering restarted after seeking for %{public}@", (*iter)->decoder_);
+                os_log_debug(log_, "Rendering continuing after discarded audio for %{public}@", (*iter)->decoder_);
 #endif /* !NDEBUG */
                 publishTransportSnapshot((*iter)->snapshot());
                 return true;
@@ -3167,6 +3169,7 @@ bool sfb::AudioPlayer::configureProcessingGraphAndRingBufferForFormat(AVAudioFor
     audioBuffer_ = std::move(ringBuffer);
     audioMetadata_.discardAll();
     renderingChunk_ = {};
+    lastRenderedSequenceNumber_ = 0;
 
     // Reconnect the source node to the next node in the processing chain
     // This is the mixer node in the default configuration, but additional nodes may
