@@ -29,6 +29,7 @@
 #import "SFBAudioPlayer+Internal.h"
 #import "SFBCStringForOSType.h"
 #import "host_time.hpp"
+#import "scope_exit.hpp"
 
 namespace {
 
@@ -1158,7 +1159,12 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
 
         // Wait for an event signal; ring buffer space availability is polled using the timeout
         const auto timeout = decodingTimeout(decoderState);
-        decodingSemaphore_.wait(timeout);
+        [[maybe_unused]] const auto result = decodingSemaphore_.wait(timeout);
+#ifndef NDEBUG
+        if (!result && decoderState == nullptr && shouldBeProcessingDecoders()) [[unlikely]] {
+            os_log_debug(log_, "Decoding thread woke on timeout with decoder to process: possible missed signal");
+        }
+#endif /* !NDEBUG */
     }
 
 #ifndef NDEBUG
@@ -1208,7 +1214,7 @@ sfb::AudioPlayer::DecoderState *sfb::AudioPlayer::processDecoderCancelations(boo
 
     // Signal the event thread if any decoders were canceled
     if (signal) {
-        eventSemaphore_.signal();
+        signalEventSemaphore();
     }
 
     // All requested cancelations have been processed and any stale audio is marked
@@ -1260,7 +1266,7 @@ bool sfb::AudioPlayer::processPendingSeek(DecoderState *decoderState, bool &form
     }
 
     if (events_.enqueue(EventCommand::seekComplete, decoderState->sequenceNumber_, framePosition)) [[likely]] {
-        eventSemaphore_.signal();
+        signalEventSemaphore();
     } else {
         os_log_fault(log_, "Error writing seek complete event");
     }
@@ -1376,7 +1382,7 @@ sfb::AudioPlayer::DecoderState *sfb::AudioPlayer::dequeueNextDecoder() noexcept 
     } catch (const std::exception &e) {
         os_log_error(log_, "Error allocating decoder state for %{public}@: %{public}s", decoder, e.what());
         if (events_.enqueue(EventCommand::allocationFailure)) [[likely]] {
-            eventSemaphore_.signal();
+            signalEventSemaphore();
         } else {
             os_log_fault(log_, "Error writing allocation failure event");
         }
@@ -1556,7 +1562,7 @@ bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *&decoderState, AVAudio
 #endif /* !NDEBUG */
                 // Submit the decoding started event for the initial start only
                 if (events_.enqueue(EventCommand::decodingStarted, decoderState->sequenceNumber_)) [[likely]] {
-                    eventSemaphore_.signal();
+                    signalEventSemaphore();
                 } else {
                     os_log_fault(log_, "Error writing decoding started event");
                 }
@@ -1587,7 +1593,7 @@ bool sfb::AudioPlayer::decodeIntoRingBuffer(DecoderState *&decoderState, AVAudio
             // Submit the decoding complete event for the first completion only
             if (!resumed) {
                 if (events_.enqueue(EventCommand::decodingComplete, decoderState->sequenceNumber_)) [[likely]] {
-                    eventSemaphore_.signal();
+                    signalEventSemaphore();
                 } else {
                     os_log_fault(log_, "Error writing decoding complete event");
                 }
@@ -1647,7 +1653,7 @@ std::chrono::nanoseconds sfb::AudioPlayer::decodingTimeout(DecoderState *decoder
 
     if (decoderState == nullptr) {
         // Idling or waiting on a decoder to complete rendering for a pending format change
-        return 500ms;
+        return 5s;
     }
 
     // Attempt to keep the ring buffer 75% full
@@ -1665,6 +1671,36 @@ std::chrono::nanoseconds sfb::AudioPlayer::decodingTimeout(DecoderState *decoder
     return std::chrono::duration_cast<std::chrono::nanoseconds>(duration);
 }
 
+#ifndef NDEBUG
+bool sfb::AudioPlayer::shouldBeProcessingDecoders() const noexcept {
+    const auto flags = loadFlags();
+
+    // Cancellation was requested but not processed
+    if (bits::is_set(flags, Flags::cancelationPending)) {
+        return true;
+    }
+
+    std::scoped_lock lock{queuedDecodersMutex_, activeDecodersMutex_};
+
+    // A decoder is waiting in the queue and there is room for it to become active
+    if (!queuedDecoders_.empty() && activeDecoders_.size() < maximumActiveDecoders) {
+        return true;
+    }
+
+    // While a format change is pending the next decoder is active but waits until the previous decoder's
+    // audio has finished rendering; only the gate opening is signaled
+    if (bits::is_set(flags, Flags::formatChangePending)) {
+        return activeDecoders_.size() == 1 && scheduledRenderingCompleteNotifications_ == 0;
+    }
+
+    // An active decoder has not finished decoding
+    return std::ranges::any_of(activeDecoders_, [](const auto &state) noexcept {
+        return bits::has_none(state->loadFlags(),
+                              DecoderState::Flags::canceled | DecoderState::Flags::decodingComplete);
+    });
+}
+#endif /* !NDEBUG */
+
 // MARK: - Rendering
 
 OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timestamp, AVAudioFrameCount frameCount,
@@ -1678,7 +1714,16 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
         audioMetadata_.discardAll();
         renderingChunk_ = {};
         clearFlags(Flags::audioStale);
+        decodingSemaphore_.signal();
     }
+
+    // Whether this render cycle enqueued an event and should signal the event semaphore
+    auto eventEnqueued = false;
+    const auto sendSignal = util::scope_exit{[&]() noexcept {
+        if (eventEnqueued) {
+            signalEventSemaphore();
+        }
+    }};
 
     // Process pending `AVAudioEngine` pause requests
     if (bits::is_set_and_is_clear(flags, Flags::active, Flags::playing)) {
@@ -1686,6 +1731,7 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
             generation != processedPauseGeneration_) [[unlikely]] {
             if (events_.enqueue(EventCommand::pauseEngine, timestamp.mHostTime, generation)) [[likely]] {
                 processedPauseGeneration_ = generation;
+                eventEnqueued = true;
             } else {
                 setFlags(Flags::renderEventDropped);
             }
@@ -1707,10 +1753,14 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
 
     // Enqueue frames rendered event(s)
     if (framesRead > 0) [[likely]] {
-        enqueueFramesRenderedEvents(framesRead, timestamp);
+        if (enqueueFramesRenderedEvents(framesRead, timestamp)) [[likely]] {
+            eventEnqueued = true;
+        }
     } else {
         isSilence = YES;
-        enqueueEmptyFramesRenderedEvent(timestamp);
+        if (enqueueEmptyFramesRenderedEvent(timestamp)) {
+            eventEnqueued = true;
+        }
     }
 
     // Suppress underrun notifications while a non-gapless format change is pending; the ring buffer
@@ -1720,8 +1770,10 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
         // Throttle underrun events to prevent saturating the event message queue
         constexpr auto throttleInterval = 100 * nanosecondsPerMillisecond;
         if (host_time::toNanoseconds(timestamp.mHostTime - lastUnderrunHostTime_) >= throttleInterval) {
-            if (!events_.enqueue(EventCommand::renderBufferUnderrun, timestamp.mHostTime, framesRead, frameCount))
-                    [[unlikely]] {
+            if (events_.enqueue(EventCommand::renderBufferUnderrun, timestamp.mHostTime, framesRead, frameCount))
+                    [[likely]] {
+                eventEnqueued = true;
+            } else {
                 setFlags(Flags::renderEventDropped);
             }
             lastUnderrunHostTime_ = timestamp.mHostTime;
@@ -1731,9 +1783,10 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
     return noErr;
 }
 
-void sfb::AudioPlayer::enqueueFramesRenderedEvents(uint32_t framesRead, const AudioTimeStamp &timestamp) noexcept {
+bool sfb::AudioPlayer::enqueueFramesRenderedEvents(uint32_t framesRead, const AudioTimeStamp &timestamp) noexcept {
     assert(framesRead > 0);
 
+    auto eventEnqueued = false;
     auto framesRemaining = framesRead;
     do {
         // Read the next chunk descriptor if needed
@@ -1757,17 +1810,20 @@ void sfb::AudioPlayer::enqueueFramesRenderedEvents(uint32_t framesRead, const Au
         // Rendering is starting
         if (renderingChunk_->framesConsumed_ == 0 && chunkSequenceNumber != lastRenderedSequenceNumber_) [[unlikely]] {
             const auto eventTime = hostTimeForFrameOffset(frameOffset, timestamp, audioBuffer_.format().mSampleRate);
-            if (!events_.enqueue(EventCommand::renderingStarted, eventTime,
-                                 renderingChunk_->descriptor_.sequenceNumber_,
-                                 renderingChunk_->descriptor_.playbackGeneration_)) [[unlikely]] {
+            if (events_.enqueue(EventCommand::renderingStarted, eventTime, renderingChunk_->descriptor_.sequenceNumber_,
+                                renderingChunk_->descriptor_.playbackGeneration_)) [[likely]] {
+                eventEnqueued = true;
+            } else {
                 setFlags(Flags::renderEventDropped);
             }
         }
 
         // Submit the frames rendered event if any frames were rendered
         if (chunkFramesConsumed > 0) [[likely]] {
-            if (!events_.enqueue(EventCommand::framesRendered, renderingChunk_->descriptor_.sequenceNumber_,
-                                 chunkFramesConsumed, renderingChunk_->descriptor_.playbackGeneration_)) [[unlikely]] {
+            if (events_.enqueue(EventCommand::framesRendered, renderingChunk_->descriptor_.sequenceNumber_,
+                                chunkFramesConsumed, renderingChunk_->descriptor_.playbackGeneration_)) [[likely]] {
+                eventEnqueued = true;
+            } else {
                 setFlags(Flags::renderEventDropped);
             }
         }
@@ -1776,9 +1832,11 @@ void sfb::AudioPlayer::enqueueFramesRenderedEvents(uint32_t framesRead, const Au
         if (renderingChunk_->descriptor_.isLast_ && chunkFramesConsumed == chunkFramesRemaining) [[unlikely]] {
             const auto eventTime = hostTimeForFrameOffset(frameOffset + chunkFramesConsumed, timestamp,
                                                           audioBuffer_.format().mSampleRate);
-            if (!events_.enqueue(EventCommand::renderingComplete, eventTime,
-                                 renderingChunk_->descriptor_.sequenceNumber_,
-                                 renderingChunk_->descriptor_.playbackGeneration_)) [[unlikely]] {
+            if (events_.enqueue(EventCommand::renderingComplete, eventTime,
+                                renderingChunk_->descriptor_.sequenceNumber_,
+                                renderingChunk_->descriptor_.playbackGeneration_)) [[likely]] {
+                eventEnqueued = true;
+            } else {
                 setFlags(Flags::renderEventDropped);
             }
         }
@@ -1793,10 +1851,14 @@ void sfb::AudioPlayer::enqueueFramesRenderedEvents(uint32_t framesRead, const Au
             renderingChunk_.reset();
         }
     } while (framesRemaining > 0);
+
+    return eventEnqueued;
 }
 
-void sfb::AudioPlayer::enqueueEmptyFramesRenderedEvent(const AudioTimeStamp &timestamp) noexcept {
+bool sfb::AudioPlayer::enqueueEmptyFramesRenderedEvent(const AudioTimeStamp &timestamp) noexcept {
     assert(!renderingChunk_);
+
+    auto eventEnqueued = false;
 
     // Check for an empty decoded chunk descriptor, and if found enqueue an empty frames rendered event to signify
     // rendering complete
@@ -1809,15 +1871,19 @@ void sfb::AudioPlayer::enqueueEmptyFramesRenderedEvent(const AudioTimeStamp &tim
 
         // Rendering is starting
         if (chunkSequenceNumber != lastRenderedSequenceNumber_) {
-            if (!events_.enqueue(EventCommand::renderingStarted, eventTime, chunkDescriptor.sequenceNumber_,
-                                 chunkDescriptor.playbackGeneration_)) [[unlikely]] {
+            if (events_.enqueue(EventCommand::renderingStarted, eventTime, chunkDescriptor.sequenceNumber_,
+                                chunkDescriptor.playbackGeneration_)) [[likely]] {
+                eventEnqueued = true;
+            } else {
                 setFlags(Flags::renderEventDropped);
             }
         }
 
         // Rendering is complete
-        if (!events_.enqueue(EventCommand::renderingComplete, eventTime, chunkDescriptor.sequenceNumber_,
-                             chunkDescriptor.playbackGeneration_)) [[unlikely]] {
+        if (events_.enqueue(EventCommand::renderingComplete, eventTime, chunkDescriptor.sequenceNumber_,
+                            chunkDescriptor.playbackGeneration_)) [[likely]] {
+            eventEnqueued = true;
+        } else {
             setFlags(Flags::renderEventDropped);
         }
 
@@ -1827,6 +1893,8 @@ void sfb::AudioPlayer::enqueueEmptyFramesRenderedEvent(const AudioTimeStamp &tim
         // Chunk processing complete
         audioMetadata_.discard();
     }
+
+    return eventEnqueued;
 }
 
 // MARK: - Event Processing
@@ -1842,6 +1910,9 @@ void sfb::AudioPlayer::processEvents(std::stop_token stoken) noexcept {
 #endif /* !NDEBUG */
 
     while (!stoken.stop_requested()) {
+        // Clear before draining so an event enqueued during the drain is followed by a new signal
+        eventSignaled_.exchange(false, std::memory_order_acq_rel);
+
 #ifndef NDEBUG
         if (const auto occupancy =
                     static_cast<double>(events_.occupiedSlots()) / static_cast<double>(events_.slotCount);
@@ -1892,27 +1963,21 @@ void sfb::AudioPlayer::processEvents(std::stop_token stoken) noexcept {
             }
         }
 
-        const auto prevFlags = clearFlags(Flags::renderEventDropped);
-        if (bits::is_set(prevFlags, Flags::renderEventDropped)) {
+        if (const auto prevFlags = clearFlags(Flags::renderEventDropped);
+            bits::is_set(prevFlags, Flags::renderEventDropped)) {
             os_log_fault(log_, "Missing rendering event(s): event message queue overrun");
         }
 
         using namespace std::chrono_literals;
 
-        // Poll more frequently when the render block can produce events
-        std::chrono::nanoseconds timeout = 500ms;
-        if (bits::is_set(prevFlags, Flags::playing)) {
-            std::lock_guard lock{activeDecodersMutex_};
-            if (firstActiveDecoderState() != nullptr) {
-                timeout = 7500us;
-            }
-        } else if (bits::is_set(prevFlags, Flags::active) && engine_.isRunning) {
-            // A paused player's engine keeps running until the delayed engine pause takes effect
-            timeout = 7500us;
+        // Wait for an event; the timeout is protection against a missed signal
+        [[maybe_unused]] const auto result = eventSemaphore_.wait(5s);
+#ifndef NDEBUG
+        if (!result && !events_.isEmpty()) [[unlikely]] {
+            // If an event is enqueued just as the wait times out the message will still be logged, hence "possible"
+            os_log_debug(log_, "Event processing thread woke on timeout with events pending: possible missed signal");
         }
-
-        // Decoding events will be signaled; render events are polled using the timeout
-        eventSemaphore_.wait(timeout);
+#endif /* !NDEBUG */
     }
 
 #ifndef NDEBUG
