@@ -1910,7 +1910,7 @@ void sfb::AudioPlayer::processEvents(std::stop_token stoken) noexcept {
 bool sfb::AudioPlayer::processDecodingStartedEvent() noexcept {
     EventCommand command;
     uint64_t sequenceNumber;
-    if (!events_.dequeue(command, sequenceNumber)) {
+    if (!events_.dequeue(command, sequenceNumber)) [[unlikely]] {
         os_log_error(log_, "Missing decoder sequence number for decoding started event");
         return false;
     }
@@ -1956,7 +1956,7 @@ bool sfb::AudioPlayer::processDecodingStartedEvent() noexcept {
 bool sfb::AudioPlayer::processDecodingCompleteEvent() noexcept {
     EventCommand command;
     uint64_t sequenceNumber;
-    if (!events_.dequeue(command, sequenceNumber)) {
+    if (!events_.dequeue(command, sequenceNumber)) [[unlikely]] {
         os_log_error(log_, "Missing decoder sequence number for decoding complete event");
         return false;
     }
@@ -1990,7 +1990,7 @@ bool sfb::AudioPlayer::processSeekCompleteEvent() noexcept {
     EventCommand command;
     uint64_t sequenceNumber;
     int64_t frame;
-    if (!events_.dequeue(command, sequenceNumber, frame)) {
+    if (!events_.dequeue(command, sequenceNumber, frame)) [[unlikely]] {
         os_log_error(log_, "Missing decoder sequence number or frame position for seek complete event");
         return false;
     }
@@ -2028,7 +2028,7 @@ bool sfb::AudioPlayer::processSeekCompleteEvent() noexcept {
 bool sfb::AudioPlayer::processDecoderCanceledEvent() noexcept {
     EventCommand command;
     uint64_t sequenceNumber;
-    if (!events_.dequeue(command, sequenceNumber)) {
+    if (!events_.dequeue(command, sequenceNumber)) [[unlikely]] {
         os_log_error(log_, "Missing decoder sequence number for decoder canceled event");
         return false;
     }
@@ -2126,7 +2126,7 @@ bool sfb::AudioPlayer::processDecoderCanceledEvent() noexcept {
 
 bool sfb::AudioPlayer::processAllocationFailureEvent() noexcept {
     EventCommand command;
-    if (!events_.dequeue(command)) {
+    if (!events_.dequeue(command)) [[unlikely]] {
         os_log_error(log_, "Missing command for allocation failure event");
         return false;
     }
@@ -2163,7 +2163,8 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
     uint64_t completionTime;
     // Whether the frames complete rendering for the decoder
     bool isFinal;
-    if (!events_.dequeue(command, sequenceNumber, frameCount, playbackGeneration, eventTime, completionTime, isFinal)) {
+    if (!events_.dequeue(command, sequenceNumber, frameCount, playbackGeneration, eventTime, completionTime, isFinal))
+            [[unlikely]] {
         os_log_error(log_, "Missing decoder sequence number, frame count, playback generation, event times, or final "
                            "flag for frames rendered event");
         return false;
@@ -2279,7 +2280,7 @@ bool sfb::AudioPlayer::processRenderBufferUnderrunEvent() noexcept {
     uint32_t framesRendered;
     // The number of frames that were requested by the IOProc
     uint32_t framesRequested;
-    if (!events_.dequeue(command, hostTime, framesRendered, framesRequested)) {
+    if (!events_.dequeue(command, hostTime, framesRendered, framesRequested)) [[unlikely]] {
         os_log_error(log_, "Missing host time or frame count for render buffer underrun event");
         return false;
     }
@@ -2298,7 +2299,7 @@ bool sfb::AudioPlayer::processPauseEngineEvent() noexcept {
     uint64_t hostTime;
     // The generation of the pause engine request processed by the render cycle
     uint64_t generation;
-    if (!events_.dequeue(command, hostTime, generation)) {
+    if (!events_.dequeue(command, hostTime, generation)) [[unlikely]] {
         os_log_error(log_, "Missing host time or generation for pause engine event");
         return false;
     }
