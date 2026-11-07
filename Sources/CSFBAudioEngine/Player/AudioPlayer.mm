@@ -1330,14 +1330,13 @@ void sfb::AudioPlayer::suspendAndRewindDecodersFollowing(uint64_t sequenceNumber
 
         // TODO: Investigate a per-state buffer to mitigate frame loss
         if (nextDecoderState->supportsSeeking()) {
-            if (NSError *seekError = nil; !nextDecoderState->seekToFrame(0, &seekError)) {
+            if (NSError *seekError = nil; nextDecoderState->seekToFrame(0, &seekError)) {
+                const auto framePosition = nextDecoderState->framesDecoded();
+                nextDecoderState->framesRendered_.store(framePosition, std::memory_order_release);
+            } else {
                 nextDecoderState->error_ = seekError;
                 nextDecoderState->setFlags(DecoderState::Flags::cancelRequested);
-                continue;
             }
-
-            const auto framePosition = nextDecoderState->framesDecoded();
-            nextDecoderState->framesRendered_.store(framePosition, std::memory_order_release);
 
             // Do not enqueue EventCommand::seekComplete here; this is an internal rewind,
             // not a user-initiated seek. Enqueuing this event pollutes the transport
@@ -1345,11 +1344,22 @@ void sfb::AudioPlayer::suspendAndRewindDecodersFollowing(uint64_t sequenceNumber
         } else {
             os_log_error(log_, "Discarding %lld frames from %{public}@", nextDecoderState->framesDecoded(),
                          nextDecoderState->decoder_);
+
+            // A non-seekable decoder that completed decoding cannot produce more audio
+            if (bits::is_set(nextDecoderState->loadFlags(), DecoderState::Flags::decodingComplete)) {
+                nextDecoderState->setFlags(DecoderState::Flags::cancelRequested);
+            }
         }
 
+        // Mark decoders that completed decoding as resumed to avoid submitting a second decoding complete event;
+        // suspend decoding to prevent a cancelation request marking the ring buffer stale
         fetchUpdate(
                 nextDecoderState->flags_,
                 [](auto val) noexcept {
+                    if (val & bits::to_underlying(DecoderState::Flags::decodingComplete)) {
+                        val = (val & ~bits::to_underlying(DecoderState::Flags::decodingComplete)) |
+                              bits::to_underlying(DecoderState::Flags::decodingResumed);
+                    }
                     return (val & ~bits::to_underlying(DecoderState::Flags::decodingStarted)) |
                            bits::to_underlying(DecoderState::Flags::decodingSuspended);
                 },
