@@ -2233,7 +2233,6 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
         } else {
             // Rendering is complete
             assert(bits::is_set(decoderFlags, DecoderState::Flags::decodingComplete));
-//            assert(bits::is_set(decoderFlags, DecoderState::Flags::renderingStarted));
 
             completedDecoder = (*iter)->decoder_;
 
