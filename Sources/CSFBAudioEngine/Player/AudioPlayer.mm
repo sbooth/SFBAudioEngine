@@ -1120,16 +1120,16 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
     auto formatMismatch = false;
 
     while (!stoken.stop_requested()) {
-        // Process cancelations and retrieve the first active decoder state
-        auto *decoderState = processDecoderCancelations(formatMismatch);
+        // Process cancelations
+        processDecoderCancelations(formatMismatch);
 
         // Process pending seek requests
-        if (decoderState != nullptr && !processPendingSeek(decoderState, formatMismatch)) {
+        if (!processPendingSeek(formatMismatch)) {
             continue;
         }
 
         // Get the earliest decoder state that has not completed decoding
-        decoderState = firstIncompleteDecoderState();
+        auto *decoderState = firstIncompleteDecoderState();
 
         // Dequeue the next decoder if there are no decoders that haven't completed decoding
         if (decoderState == nullptr) {
@@ -1166,7 +1166,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
 #endif /* !NDEBUG */
 }
 
-sfb::AudioPlayer::DecoderState *sfb::AudioPlayer::processDecoderCancelations(bool &formatMismatch) noexcept {
+void sfb::AudioPlayer::processDecoderCancelations(bool &formatMismatch) noexcept {
     std::lock_guard lock{activeDecodersMutex_};
 
     auto signal = false;
@@ -1221,49 +1221,58 @@ sfb::AudioPlayer::DecoderState *sfb::AudioPlayer::processDecoderCancelations(boo
     }
 
     clearFlags(flagsToClear);
-
-    // Return the earliest decoder state that has not completed rendering
-    return firstActiveDecoderState();
 }
 
-bool sfb::AudioPlayer::processPendingSeek(DecoderState *decoderState, bool &formatMismatch) noexcept {
-    assert(decoderState != nullptr);
-
+bool sfb::AudioPlayer::processPendingSeek(bool &formatMismatch) noexcept {
     auto pendingSeek = pendingSeek_.load(std::memory_order_acquire);
-    if (pendingSeek.sequenceNumber_ != decoderState->sequenceNumber_) {
+    if (pendingSeek.frame_ == -1) {
         return true;
+    }
+
+    // Rendering continues while the decoder seeks, so the decoder could complete rendering and its state be deleted
+    // by the rendering complete event before the seek finishes. Locate the decoder state and expire inflight render
+    // events in a single critical section: once the playback generation advances, a rendering complete event for
+    // audio decoded before the seek is discarded without deleting the decoder state. A decoder state is otherwise
+    // deleted only after this thread marks it canceled, so it remains valid while seeking without holding the lock.
+    DecoderState *decoderState = nullptr;
+    {
+        std::lock_guard lock{activeDecodersMutex_};
+
+        decoderState = firstActiveDecoderState();
+        if (decoderState == nullptr || decoderState->sequenceNumber_ != pendingSeek.sequenceNumber_) {
+            // Discard seeks for preceding decoders
+            if (decoderState == nullptr || pendingSeek.sequenceNumber_ < decoderState->sequenceNumber_) {
+                pendingSeek_.compare_exchange_strong(pendingSeek, {}, std::memory_order_acq_rel,
+                                                     std::memory_order_relaxed);
+            }
+            return true;
+        }
+
+        playbackGeneration_.fetch_add(1, std::memory_order_release);
     }
 
     if (NSError *seekError = nil; !decoderState->seekToFrame(pendingSeek.frame_, &seekError)) {
         decoderState->error_ = seekError;
         decoderState->setFlags(DecoderState::Flags::cancelRequested);
+        pendingSeek_.compare_exchange_strong(pendingSeek, {}, std::memory_order_acq_rel, std::memory_order_relaxed);
         return false;
     }
-
-    // Clear the pending seek if it hasn't been replaced by a newer seek request
-    pendingSeek_.compare_exchange_strong(pendingSeek, {}, std::memory_order_acq_rel, std::memory_order_relaxed);
 
     // Mute until the seek is complete and the ring buffer is emptied and refilled
     setFlags(Flags::muted | Flags::audioStale);
 
+    // Sync frames rendered with frames decoded
     const auto framePosition = decoderState->framesDecoded();
-
-    {
-        // Ensure the playback generation increment and frame counter updates occur together
-        std::lock_guard lock{activeDecodersMutex_};
-
-        // Increment the playback generation to expire any inflight events
-        playbackGeneration_.fetch_add(1, std::memory_order_release);
-
-        // Sync frames rendered with frames decoded
-        decoderState->framesRendered_.store(framePosition, std::memory_order_release);
-    }
+    decoderState->framesRendered_.store(framePosition, std::memory_order_release);
 
     if (events_.enqueue(EventCommand::seekComplete, decoderState->sequenceNumber_, framePosition)) [[likely]] {
         eventSemaphore_.signal();
     } else {
         os_log_fault(log_, "Error writing seek complete event");
     }
+
+    // Clear the pending seek if it hasn't been replaced by a newer seek request
+    pendingSeek_.compare_exchange_strong(pendingSeek, {}, std::memory_order_acq_rel, std::memory_order_relaxed);
 
     if (bits::is_set(decoderState->loadFlags(), DecoderState::Flags::decodingComplete)) {
 #ifndef NDEBUG
@@ -2244,12 +2253,13 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
     //
     // This is indicated by an increment in the playback generation.
     //
-    // NB: The generation check and frames rendered load below must happen under
-    // activeDecodersMutex_. A seek on the decoding thread bumps playbackGeneration_ and resets
-    // a decoder state's framesRendered_ under the same mutex (see the seek handling in the
-    // decoding loop). Checking the generation before taking the lock leaves a window in which
-    // the seek's reset can land between the check and the read below, making a stale event's
-    // frame count get applied to post-seek counters.
+    // NB: The generation check and frames rendered update below must happen under
+    // activeDecodersMutex_. A seek on the decoding thread bumps playbackGeneration_ under the
+    // same mutex before seeking, and resets the decoder state's framesRendered_ after seeking
+    // (see processPendingSeek()). An event that passes the generation check is therefore applied
+    // before the bump and overwritten by the reset. Checking the generation before taking the lock
+    // leaves a window in which the bump and reset can land between the check and the update below,
+    // making a stale event's frame count get applied to post-seek counters.
 
     {
         std::lock_guard lock{activeDecodersMutex_};

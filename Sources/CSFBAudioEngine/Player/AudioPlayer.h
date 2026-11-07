@@ -421,11 +421,11 @@ class AudioPlayer final {
     /// - note: This is the thread entry point for the decoding thread
     void processDecoders(std::stop_token stoken) noexcept;
 
-    /// Processes decoder cancelations and returns the first active decoder state
-    DecoderState *_Nullable processDecoderCancelations(bool &formatMismatch) noexcept;
+    /// Processes decoder cancelations
+    void processDecoderCancelations(bool &formatMismatch) noexcept;
 
-    /// Processes the pending seek for `decoderState`
-    bool processPendingSeek(DecoderState *_Nonnull decoderState, bool &formatMismatch) noexcept;
+    /// Processes the pending seek for the first active decoder, if any
+    bool processPendingSeek(bool &formatMismatch) noexcept;
 
     /// Returns the first decoder state in `activeDecoders_` that is eligible for decoding
     DecoderState *_Nullable firstIncompleteDecoderState() const noexcept;
