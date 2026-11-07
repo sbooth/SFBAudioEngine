@@ -158,7 +158,7 @@ class AudioPlayer final {
     dsema::Semaphore eventSemaphore_{0};
 
     /// Message queue communicating events to the event processing thread
-    mpsc::MessageQueue<256, 32> events_;
+    mpsc::MessageQueue<256, 48> events_;
 
     /// The `AVAudioEngine` instance
     AVAudioEngine *engine_{nil};
@@ -469,9 +469,6 @@ class AudioPlayer final {
     /// The current rendering chunk descriptor
     std::optional<detail::RenderingChunkDescriptor> renderingChunk_{};
 
-    /// The sequence number of the decoder that produced the most recently rendered chunk, or 0 if none
-    uint64_t lastRenderedSequenceNumber_{0};
-
     /// The host time of the last ring buffer underrun
     uint64_t lastUnderrunHostTime_{0};
 
@@ -494,16 +491,12 @@ class AudioPlayer final {
         decoderCanceled = 4,
         /// Allocation failure
         allocationFailure = 5,
-        /// Rendering started
-        renderingStarted = 6,
         /// Audio frames rendered from ring buffer
-        framesRendered = 7,
-        /// Rendering complete
-        renderingComplete = 8,
+        framesRendered = 6,
         /// Ring buffer contained fewer audio frames than requested
-        renderBufferUnderrun = 9,
+        renderBufferUnderrun = 7,
         /// `AVAudioEngine` pause requested
-        pauseEngine = 10,
+        pauseEngine = 8,
     };
 
     // MARK: - Event Processing
@@ -527,14 +520,8 @@ class AudioPlayer final {
     /// Dequeues and processes an allocation failure event from `events_`
     bool processAllocationFailureEvent() noexcept;
 
-    /// Dequeues and processes a rendering started event from `events_`
-    bool processRenderingStartedEvent() noexcept;
-
     /// Dequeues and processes a frames rendered event from `events_`
     bool processFramesRenderedEvent() noexcept;
-
-    /// Dequeues and processes a rendering complete event from `events_`
-    bool processRenderingCompleteEvent() noexcept;
 
     /// Reads and processes a render buffer underrun event from `events_`
     bool processRenderBufferUnderrunEvent() noexcept;
