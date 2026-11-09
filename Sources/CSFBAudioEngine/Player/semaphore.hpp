@@ -47,31 +47,20 @@ class Semaphore final {
     /// @return true if the semaphore wait operation was successful, false otherwise.
     bool wait() noexcept;
 
-    /// Possible results for a timed wait.
-    enum class timedwait_result {
-        /// The semaphore was acquired.
-        acquired,
-        /// The wait operation timed out.
-        timed_out,
-        /// An error occured.
-        error,
-    };
-
     /// Decrements the semaphore count.
     ///
     /// If the semaphore count is negative after decrementing, the calling thread blocks.
     /// @param wait_time How long to wait before a timeout occurs.
-    /// @return A result indicating whether the semaphore was acquired, the wait operation timed out, or an error
-    /// occurred.
-    timedwait_result timedwait(mach_timespec_t wait_time) noexcept;
+    /// @return true if the semaphore was acquired, false if the wait operation timed out, `wait_time` is invalid, or
+    /// an error occurred.
+    bool timedwait(mach_timespec_t wait_time) noexcept;
 
     /// Decrements the semaphore count.
     ///
     /// If the semaphore count is negative after decrementing, the calling thread blocks.
     /// @param timeout How long to wait before a timeout occurs.
-    /// @return A result indicating whether the semaphore was acquired, the wait operation timed out, or an error
-    /// occurred.
-    timedwait_result timedwait(std::chrono::nanoseconds timeout) noexcept;
+    /// @return true if the semaphore was acquired, false if the wait operation timed out or an error occurred.
+    bool timedwait(std::chrono::nanoseconds timeout) noexcept;
 
     /// Increments the semaphore count.
     ///
@@ -131,18 +120,6 @@ inline std::error_code mach_error_code(kern_return_t kr) {
     return std::error_code(static_cast<int>(kr), mach_category());
 }
 
-/// Converts a kernel return value to a timedwait_result
-[[nodiscard]] constexpr Semaphore::timedwait_result to_timedwait_result(kern_return_t kr) noexcept {
-    switch (kr) {
-    case KERN_SUCCESS:
-        return Semaphore::timedwait_result::acquired;
-    case KERN_OPERATION_TIMED_OUT:
-        return Semaphore::timedwait_result::timed_out;
-    default:
-        return Semaphore::timedwait_result::error;
-    }
-}
-
 } /* namespace detail */
 
 inline Semaphore::Semaphore(int value) {
@@ -165,14 +142,16 @@ inline bool Semaphore::wait() noexcept {
     return kr == KERN_SUCCESS;
 }
 
-inline auto Semaphore::timedwait(mach_timespec_t wait_time) noexcept -> timedwait_result {
-    if (BAD_MACH_TIMESPEC(&wait_time)) {
-        return timedwait_result::error;
+inline bool Semaphore::timedwait(mach_timespec_t wait_time) noexcept {
+    const auto badTimespec = BAD_MACH_TIMESPEC(&wait_time);
+    assert(!badTimespec);
+    if (badTimespec) {
+        return false;
     }
     return timedwait(std::chrono::seconds{wait_time.tv_sec} + std::chrono::nanoseconds{wait_time.tv_nsec});
 }
 
-inline auto Semaphore::timedwait(std::chrono::nanoseconds timeout) noexcept -> timedwait_result {
+inline bool Semaphore::timedwait(std::chrono::nanoseconds timeout) noexcept {
     const auto deadline =
             timeout > std::chrono::nanoseconds::zero()
                     ? host_time::current() + host_time::fromNanoseconds(static_cast<uint64_t>(timeout.count()))
@@ -183,7 +162,9 @@ inline auto Semaphore::timedwait(std::chrono::nanoseconds timeout) noexcept -> t
         const auto waitTime = now >= deadline ? detail::timespec_zero
                                               : detail::nsec_to_timespec(host_time::toNanoseconds(deadline - now));
         if (const auto kr = semaphore_timedwait(semaphore_, waitTime); kr != KERN_ABORTED) {
-            return detail::to_timedwait_result(kr);
+            // Other results indicate an invalid or destroyed semaphore
+            assert(kr == KERN_SUCCESS || kr == KERN_OPERATION_TIMED_OUT);
+            return kr == KERN_SUCCESS;
         }
     }
 }
