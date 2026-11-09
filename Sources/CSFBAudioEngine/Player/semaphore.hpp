@@ -12,6 +12,7 @@
 #include <mach/semaphore.h>
 #include <mach/task.h>
 
+#include <cassert>
 #include <chrono>
 #include <cstdint>
 #include <limits>
@@ -79,9 +80,7 @@ class Semaphore final {
     /// @return true if the semaphore was signalled, false otherwise.
     bool signal() noexcept;
 
-    /// Wakes up all of the threads blocked on the semaphore.
-    ///
-    /// The semaphore count is reset to zero.
+    /// Wakes all threads blocked on the semaphore and, if any were blocked, resets the count to zero.
     /// @return true if the semaphore was signalled, false otherwise.
     bool signal_all() noexcept;
 
@@ -153,7 +152,10 @@ inline Semaphore::Semaphore(int value) {
     }
 }
 
-inline Semaphore::~Semaphore() noexcept { semaphore_destroy(mach_task_self(), semaphore_); }
+inline Semaphore::~Semaphore() noexcept {
+    [[maybe_unused]] const auto kr = semaphore_destroy(mach_task_self(), semaphore_);
+    assert(kr == KERN_SUCCESS);
+}
 
 inline bool Semaphore::wait() noexcept {
     kern_return_t kr;
@@ -171,27 +173,18 @@ inline auto Semaphore::timedwait(mach_timespec_t wait_time) noexcept -> timedwai
 }
 
 inline auto Semaphore::timedwait(std::chrono::nanoseconds timeout) noexcept -> timedwait_result {
-    if (timeout <= std::chrono::nanoseconds::zero()) {
-        return detail::to_timedwait_result(semaphore_timedwait(semaphore_, detail::timespec_zero));
-    }
-
-    const auto nanoseconds = static_cast<uint64_t>(timeout.count());
-    const auto deadline = host_time::current() + host_time::fromNanoseconds(nanoseconds);
+    const auto deadline =
+            timeout > std::chrono::nanoseconds::zero()
+                    ? host_time::current() + host_time::fromNanoseconds(static_cast<uint64_t>(timeout.count()))
+                    : uint64_t{0};
 
     for (;;) {
         const auto now = host_time::current();
-        if (now >= deadline) {
-            return detail::to_timedwait_result(semaphore_timedwait(semaphore_, detail::timespec_zero));
+        const auto waitTime = now >= deadline ? detail::timespec_zero
+                                              : detail::nsec_to_timespec(host_time::toNanoseconds(deadline - now));
+        if (const auto kr = semaphore_timedwait(semaphore_, waitTime); kr != KERN_ABORTED) {
+            return detail::to_timedwait_result(kr);
         }
-
-        const auto remainingNanoseconds = host_time::toNanoseconds(deadline - now);
-        const auto currentWait = detail::nsec_to_timespec(remainingNanoseconds);
-
-        const auto kr = semaphore_timedwait(semaphore_, currentWait);
-        if (kr == KERN_ABORTED) {
-            continue;
-        }
-        return detail::to_timedwait_result(kr);
     }
 }
 
