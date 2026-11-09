@@ -44,8 +44,7 @@ class Semaphore final {
     /// Decrements the semaphore count.
     ///
     /// If the semaphore count is negative after decrementing, the calling thread blocks.
-    /// @return true if the semaphore wait operation was successful, false otherwise.
-    bool wait() noexcept;
+    void wait() noexcept;
 
     /// Decrements the semaphore count.
     ///
@@ -53,14 +52,14 @@ class Semaphore final {
     /// @param wait_time How long to wait before a timeout occurs.
     /// @return true if the semaphore was acquired, false if the wait operation timed out, `wait_time` is invalid, or
     /// an error occurred.
-    bool timedwait(mach_timespec_t wait_time) noexcept;
+    bool wait(mach_timespec_t wait_time) noexcept;
 
     /// Decrements the semaphore count.
     ///
     /// If the semaphore count is negative after decrementing, the calling thread blocks.
     /// @param timeout How long to wait before a timeout occurs.
     /// @return true if the semaphore was acquired, false if the wait operation timed out or an error occurred.
-    bool timedwait(std::chrono::nanoseconds timeout) noexcept;
+    bool wait(std::chrono::nanoseconds timeout) noexcept;
 
     /// Increments the semaphore count.
     ///
@@ -134,24 +133,24 @@ inline Semaphore::~Semaphore() noexcept {
     assert(kr == KERN_SUCCESS);
 }
 
-inline bool Semaphore::wait() noexcept {
+inline void Semaphore::wait() noexcept {
     kern_return_t kr;
     do {
         kr = semaphore_wait(semaphore_);
     } while (__builtin_expect(kr == KERN_ABORTED, 0));
-    return kr == KERN_SUCCESS;
+    assert(kr == KERN_SUCCESS);
 }
 
-inline bool Semaphore::timedwait(mach_timespec_t wait_time) noexcept {
+inline bool Semaphore::wait(mach_timespec_t wait_time) noexcept {
     const auto badTimespec = BAD_MACH_TIMESPEC(&wait_time);
     assert(!badTimespec);
     if (badTimespec) {
         return false;
     }
-    return timedwait(std::chrono::seconds{wait_time.tv_sec} + std::chrono::nanoseconds{wait_time.tv_nsec});
+    return wait(std::chrono::seconds{wait_time.tv_sec} + std::chrono::nanoseconds{wait_time.tv_nsec});
 }
 
-inline bool Semaphore::timedwait(std::chrono::nanoseconds timeout) noexcept {
+inline bool Semaphore::wait(std::chrono::nanoseconds timeout) noexcept {
     const auto deadline =
             timeout > std::chrono::nanoseconds::zero()
                     ? host_time::current() + host_time::fromNanoseconds(static_cast<uint64_t>(timeout.count()))

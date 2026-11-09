@@ -1159,7 +1159,7 @@ void sfb::AudioPlayer::processDecoders(std::stop_token stoken) noexcept {
 
         // Wait for an event signal; ring buffer space availability is polled using the timeout
         const auto timeout = decodingTimeout(decoderState);
-        [[maybe_unused]] const auto signaled = decodingSemaphore_.timedwait(timeout);
+        [[maybe_unused]] const auto signaled = decodingSemaphore_.wait(timeout);
 #ifndef NDEBUG
         if (!signaled && decoderState == nullptr && shouldBeProcessingDecoders()) [[unlikely]] {
             os_log_debug(log_, "Decoding thread woke on timeout with decoder to process: possible missed signal");
@@ -1951,7 +1951,7 @@ void sfb::AudioPlayer::processEvents(std::stop_token stoken) noexcept {
         using namespace std::chrono_literals;
 
         // Wait for an event; the timeout is protection against a missed signal
-        [[maybe_unused]] const auto signaled = eventSemaphore_.timedwait(5s);
+        [[maybe_unused]] const auto signaled = eventSemaphore_.wait(5s);
 #ifndef NDEBUG
         if (!signaled && !events_.isEmpty()) [[unlikely]] {
             // If an event is enqueued just as the wait times out the message will still be logged, hence "possible"
