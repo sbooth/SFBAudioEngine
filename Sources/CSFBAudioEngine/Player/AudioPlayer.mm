@@ -81,7 +81,7 @@ void logRenderingNotificationArrival(const char *notification, uint64_t hostTime
                          static_cast<double>(lateTolerance) / nanosecondsPerMillisecond);
         }
     } else if (const auto early = host_time::toNanoseconds(hostTime - now); early > earlyTolerance) {
-        os_log_debug(sfb::AudioPlayer::log_, "%{public}s notification arrived %.2f msec early, (tolerance %.2f msec)",
+        os_log_debug(sfb::AudioPlayer::log_, "%{public}s notification arrived %.2f msec early (tolerance %.2f msec)",
                      notification, static_cast<double>(early) / nanosecondsPerMillisecond,
                      static_cast<double>(earlyTolerance) / nanosecondsPerMillisecond);
     }
