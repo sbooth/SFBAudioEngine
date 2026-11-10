@@ -144,7 +144,7 @@ inline void Semaphore::wait() noexcept {
 inline bool Semaphore::wait(mach_timespec_t waitTime) noexcept {
     const auto badTimespec = BAD_MACH_TIMESPEC(&waitTime);
     assert(!badTimespec);
-    if (badTimespec) {
+    if (badTimespec) [[unikely]] {
         return false;
     }
     return wait(std::chrono::seconds{waitTime.tv_sec} + std::chrono::nanoseconds{waitTime.tv_nsec});
