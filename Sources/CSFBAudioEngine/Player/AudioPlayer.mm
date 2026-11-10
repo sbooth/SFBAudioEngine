@@ -60,6 +60,7 @@ constexpr char decoderIsCanceledKey = '\0';
 
 // MARK: - Local Functions
 
+#ifndef NDEBUG
 /// Returns the leeway in nanoseconds the system applies to a `dispatch_after` deadline `delay` nanoseconds in the
 /// future
 constexpr uint64_t dispatchAfterLeeway(uint64_t delay) noexcept {
@@ -68,7 +69,6 @@ constexpr uint64_t dispatchAfterLeeway(uint64_t delay) noexcept {
     return std::clamp(delay / 10, minimumLeeway, maximumLeeway);
 }
 
-#ifndef NDEBUG
 /// Logs a notification scheduled for `hostTime` that arrived more than `earlyTolerance` early or more than
 /// `lateTolerance` late, both in nanoseconds
 void logRenderingNotificationArrival(const char *notification, uint64_t hostTime, uint64_t earlyTolerance,
