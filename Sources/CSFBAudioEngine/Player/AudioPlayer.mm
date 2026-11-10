@@ -47,6 +47,11 @@ constexpr uint64_t nanosecondsPerSecond = 1'000'000'000;
 /// The number of nanoseconds in one millisecond
 constexpr uint64_t nanosecondsPerMillisecond = 1'000'000;
 
+#ifndef NDEBUG
+/// Time allowed to wake a dispatch queue in addition to the `dispatch_after` leeway
+constexpr uint64_t dispatchQueueWakeAllowance = nanosecondsPerMillisecond / 2;
+#endif /* !NDEBUG */
+
 /// The closest double value to 2/3
 constexpr double twoThirds = 0x1.5555'5555'5555'5p-1;
 
@@ -54,6 +59,34 @@ constexpr double twoThirds = 0x1.5555'5555'5555'5p-1;
 constexpr char decoderIsCanceledKey = '\0';
 
 // MARK: - Local Functions
+
+#ifndef NDEBUG
+/// Returns the leeway in nanoseconds the system applies to a `dispatch_after` deadline `delay` nanoseconds in the
+/// future
+constexpr uint64_t dispatchAfterLeeway(uint64_t delay) noexcept {
+    constexpr uint64_t minimumLeeway = nanosecondsPerMillisecond;
+    constexpr uint64_t maximumLeeway = 60 * nanosecondsPerSecond;
+    return std::clamp(delay / 10, minimumLeeway, maximumLeeway);
+}
+
+/// Logs a notification scheduled for `hostTime` that arrived more than `earlyTolerance` early or more than
+/// `lateTolerance` late, both in nanoseconds
+void logRenderingNotificationArrival(const char *notification, uint64_t hostTime, uint64_t earlyTolerance,
+                                     uint64_t lateTolerance) noexcept {
+    const auto now = host_time::current();
+    if (now >= hostTime) {
+        if (const auto late = host_time::toNanoseconds(now - hostTime); late > lateTolerance) {
+            os_log_debug(sfb::AudioPlayer::log_, "%{public}s notification arrived %.2f msec late (tolerance %.2f msec)",
+                         notification, static_cast<double>(late) / nanosecondsPerMillisecond,
+                         static_cast<double>(lateTolerance) / nanosecondsPerMillisecond);
+        }
+    } else if (const auto early = host_time::toNanoseconds(hostTime - now); early > earlyTolerance) {
+        os_log_debug(sfb::AudioPlayer::log_, "%{public}s notification arrived %.2f msec early, (tolerance %.2f msec)",
+                     notification, static_cast<double>(early) / nanosecondsPerMillisecond,
+                     static_cast<double>(earlyTolerance) / nanosecondsPerMillisecond);
+    }
+}
+#endif /* !NDEBUG */
 
 void audioEngineConfigurationChangeNotificationCallback([[maybe_unused]] CFNotificationCenterRef center, void *observer,
                                                         [[maybe_unused]] CFNotificationName name, const void *object,
@@ -175,9 +208,6 @@ T fetchUpdate(std::atomic<T> &atom, Func &&func,
         }
     }
 }
-
-/// Returns the absolute difference between a and b
-constexpr uint64_t absoluteDifference(uint64_t a, uint64_t b) noexcept { return (a >= b) ? (a - b) : (b - a); }
 
 /// Hints to the CPU that the current thread is in a spin-wait loop.
 ///
@@ -2374,6 +2404,14 @@ void sfb::AudioPlayer::handleRenderingWillStart(Decoder decoder, uint64_t hostTi
     // in the event the player is deallocated before the closure is called
     __weak SFBAudioPlayer *weakPlayer = player_;
 
+#ifndef NDEBUG
+    const auto earlyTolerance = static_cast<uint64_t>(static_cast<double>(nanosecondsPerSecond) /
+                                                      [sourceNode_ outputFormatForBus:0].sampleRate);
+    const auto lateTolerance =
+            dispatchAfterLeeway(host_time::toNanoseconds(hostTime - std::min(hostTime, host_time::current()))) +
+            dispatchQueueWakeAllowance;
+#endif /* !NDEBUG */
+
     // Schedule the rendering started notification at the expected host time
     dispatch_after(hostTime, eventQueue_, ^{
         // If weakPlayer is nil it means the SFBAudioPlayer instance was deallocated
@@ -2412,14 +2450,7 @@ void sfb::AudioPlayer::handleRenderingWillStart(Decoder decoder, uint64_t hostTi
         }
 
 #ifndef NDEBUG
-        const auto now = host_time::current();
-        const auto delta = host_time::toNanoseconds(absoluteDifference(hostTime, now));
-        const auto tolerance =
-                static_cast<uint64_t>(nanosecondsPerSecond / [that->sourceNode_ outputFormatForBus:0].sampleRate);
-        if (delta > tolerance) {
-            os_log_debug(log_, "Rendering started notification arrived %.2f msec %s",
-                         static_cast<double>(delta) / nanosecondsPerMillisecond, now > hostTime ? "late" : "early");
-        }
+        logRenderingNotificationArrival("Rendering started", hostTime, earlyTolerance, lateTolerance);
 #endif /* !NDEBUG */
 
         if (nowPlayingChanged) {
@@ -2464,6 +2495,14 @@ void sfb::AudioPlayer::handleRenderingWillComplete(Decoder decoder, uint64_t hos
     // in the event the player is deallocated before the closure is called
     __weak SFBAudioPlayer *weakPlayer = player_;
 
+#ifndef NDEBUG
+    const auto earlyTolerance = static_cast<uint64_t>(static_cast<double>(nanosecondsPerSecond) /
+                                                      [sourceNode_ outputFormatForBus:0].sampleRate);
+    const auto lateTolerance =
+            dispatchAfterLeeway(host_time::toNanoseconds(hostTime - std::min(hostTime, host_time::current()))) +
+            dispatchQueueWakeAllowance;
+#endif /* !NDEBUG */
+
     // Schedule the rendering complete notification at the expected host time
     dispatch_after(hostTime, eventQueue_, ^{
         // If weakPlayer is nil it means the owning SFBAudioPlayer instance was deallocated
@@ -2507,14 +2546,7 @@ void sfb::AudioPlayer::handleRenderingWillComplete(Decoder decoder, uint64_t hos
         }
 
 #ifndef NDEBUG
-        const auto now = host_time::current();
-        const auto delta = host_time::toNanoseconds(absoluteDifference(hostTime, now));
-        const auto tolerance =
-                static_cast<uint64_t>(nanosecondsPerSecond / [that->sourceNode_ outputFormatForBus:0].sampleRate);
-        if (delta > tolerance) {
-            os_log_debug(log_, "Rendering complete notification arrived %.2f msec %s",
-                         static_cast<double>(delta) / nanosecondsPerMillisecond, now > hostTime ? "late" : "early");
-        }
+        logRenderingNotificationArrival("Rendering complete", hostTime, earlyTolerance, lateTolerance);
 #endif /* !NDEBUG */
 
         if (__strong id<SFBAudioPlayerDelegate> delegate = player.delegate;
