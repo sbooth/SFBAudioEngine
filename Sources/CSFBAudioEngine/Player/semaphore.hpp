@@ -160,11 +160,13 @@ inline bool Semaphore::wait(std::chrono::nanoseconds timeout) noexcept {
         const auto now = host_time::current();
         const auto waitTime = now >= deadline ? detail::timespec_zero
                                               : detail::nsec_to_timespec(host_time::toNanoseconds(deadline - now));
-        if (const auto kr = semaphore_timedwait(semaphore_, waitTime); kr != KERN_ABORTED) {
-            // Other results indicate an invalid or destroyed semaphore
-            assert(kr == KERN_SUCCESS || kr == KERN_OPERATION_TIMED_OUT);
-            return kr == KERN_SUCCESS;
+        const auto kr = semaphore_timedwait(semaphore_, waitTime);
+        if (kr == KERN_ABORTED) [[unlikely]] {
+            continue;
         }
+        // Other results indicate an invalid or destroyed semaphore
+        assert(kr == KERN_SUCCESS || kr == KERN_OPERATION_TIMED_OUT);
+        return kr == KERN_SUCCESS;
     }
 }
 
