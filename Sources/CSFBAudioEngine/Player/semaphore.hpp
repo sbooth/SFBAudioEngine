@@ -49,14 +49,6 @@ class Semaphore final {
     /// Decrements the semaphore count.
     ///
     /// If the semaphore count is negative after decrementing, the calling thread blocks.
-    /// @param waitTime How long to wait before a timeout occurs.
-    /// @return true if the semaphore was acquired, false if the wait operation timed out, `waitTime` is invalid, or
-    /// an error occurred.
-    bool wait(mach_timespec_t waitTime) noexcept;
-
-    /// Decrements the semaphore count.
-    ///
-    /// If the semaphore count is negative after decrementing, the calling thread blocks.
     /// @param timeout How long to wait before a timeout occurs.
     /// @return true if the semaphore was acquired, false if the wait operation timed out or an error occurred.
     bool wait(std::chrono::nanoseconds timeout) noexcept;
@@ -67,10 +59,6 @@ class Semaphore final {
     /// the waiting thread is scheduled to execute.
     /// @return true if the semaphore was signalled, false otherwise.
     bool signal() noexcept;
-
-    /// Wakes all threads blocked on the semaphore and, if any were blocked, resets the count to zero.
-    /// @return true if the semaphore was signalled, false otherwise.
-    bool signalAll() noexcept;
 
   private:
     /// The underlying mach semaphore.
@@ -141,15 +129,6 @@ inline void Semaphore::wait() noexcept {
     assert(kr == KERN_SUCCESS);
 }
 
-inline bool Semaphore::wait(mach_timespec_t waitTime) noexcept {
-    const auto badTimespec = BAD_MACH_TIMESPEC(&waitTime);
-    assert(!badTimespec);
-    if (badTimespec) [[unikely]] {
-        return false;
-    }
-    return wait(std::chrono::seconds{waitTime.tv_sec} + std::chrono::nanoseconds{waitTime.tv_nsec});
-}
-
 inline bool Semaphore::wait(std::chrono::nanoseconds timeout) noexcept {
     const auto deadline =
             timeout > std::chrono::nanoseconds::zero()
@@ -171,7 +150,5 @@ inline bool Semaphore::wait(std::chrono::nanoseconds timeout) noexcept {
 }
 
 inline bool Semaphore::signal() noexcept { return semaphore_signal(semaphore_) == KERN_SUCCESS; }
-
-inline bool Semaphore::signalAll() noexcept { return semaphore_signal_all(semaphore_) == KERN_SUCCESS; }
 
 } /* namespace msema */
