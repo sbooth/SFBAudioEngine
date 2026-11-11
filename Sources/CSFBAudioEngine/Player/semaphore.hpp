@@ -1,5 +1,5 @@
 //
-// SPDX-FileCopyrightText: 2026 Stephen F. Booth <contact@sbooth.dev>
+// SPDX-FileCopyrightText: 2010 Stephen F. Booth <contact@sbooth.dev>
 // SPDX-License-Identifier: MIT
 //
 // Part of https://github.com/sbooth/SFBAudioEngine
@@ -7,148 +7,83 @@
 
 #pragma once
 
-#include <mach/mach_error.h>
-#include <mach/mach_init.h>
-#include <mach/semaphore.h>
-#include <mach/task.h>
+#include <dispatch/dispatch.h>
 
-#include <cassert>
 #include <chrono>
 #include <cstdint>
-#include <limits>
-#include <system_error>
+#include <stdexcept>
 
-#include "host_time.hpp"
+namespace dsema {
 
-namespace msema {
-
-/// A semaphore_t wrapper.
+/// A dispatch_semaphore_t wrapper.
 class Semaphore final {
   public:
     /// Creates a new semaphore.
-    ///
-    /// The semaphore uses a first-in-first-out policy for scheduling thread wakeup.
     /// @param value The starting value for the semaphore.
-    /// @throw std::system_error if the semaphore could not be created.
-    explicit Semaphore(int value);
+    /// @throw std::invalid_argument if value is less than zero or std::runtime_error if the semaphore could not be
+    /// created.
+    explicit Semaphore(std::intptr_t value);
 
-    Semaphore(const Semaphore &) noexcept = delete;
-    Semaphore &operator=(const Semaphore &) noexcept = delete;
+    /// Creates a semaphore from an existing semaphore.
+    /// @param other The semaphore to copy.
+    Semaphore(const Semaphore &other) noexcept = default;
+
+    /// Replaces this semaphore with an existing semaphore.
+    /// @param other The semaphore to copy.
+    /// @return A reference to this.
+    Semaphore &operator=(const Semaphore &other) noexcept = default;
 
     Semaphore(Semaphore &&) = delete;
     Semaphore &operator=(Semaphore &&) = delete;
 
-    /// Releases the underlying mach semaphore.
-    ~Semaphore() noexcept;
+    /// Releases the underlying dispatch semaphore.
+    ~Semaphore() noexcept = default;
 
-    /// Decrements the semaphore count.
+    /// Waits for (decrements) the semaphore.
     ///
-    /// If the semaphore count is negative after decrementing, the calling thread blocks.
+    /// If the resulting value is less than zero this function waits for a signal to occur before returning.
     void wait() noexcept;
 
-    /// Decrements the semaphore count.
+    /// Waits for (decrements) the semaphore.
     ///
-    /// If the semaphore count is negative after decrementing, the calling thread blocks.
-    /// @param timeout How long to wait before a timeout occurs.
-    /// @return true if the semaphore was acquired, false if the wait operation timed out or an error occurred.
+    /// If the resulting value is less than zero this function waits for a signal to occur before returning.
+    /// @param timeout How long to wait before timing out.
+    /// @return true if the semaphore was decremented, false otherwise.
     bool wait(std::chrono::nanoseconds timeout) noexcept;
 
-    /// Increments the semaphore count.
+    /// Signals (increments) the semaphore.
     ///
-    /// If the count goes non-negative (i.e. greater than or equal to 0) and a thread is blocked on the semaphore, then
-    /// the waiting thread is scheduled to execute.
-    /// @return true if the semaphore was signalled, false otherwise.
+    /// If the previous value was less than zero, this function wakes a waiting thread.
+    /// @return true if a thread was woken, false otherwise
     bool signal() noexcept;
 
   private:
-    /// The underlying mach semaphore.
-    semaphore_t semaphore_{SEMAPHORE_NULL};
+    /// The underlying dispatch semaphore.
+    dispatch_semaphore_t semaphore_{nullptr};
 };
 
 // MARK: -
 
-namespace detail {
-
-/// The number of nanoseconds in one second.
-inline constexpr uint64_t nsec_per_sec = 1'000'000'000;
-
-/// Converts a nanosecond count to a `mach_timespec_t`, clamping `tv_sec` to fit in an `unsigned int`.
-[[nodiscard]] constexpr mach_timespec_t nsec_to_timespec(uint64_t ns) noexcept {
-    constexpr uint64_t max_sec = std::numeric_limits<unsigned int>::max();
-    uint64_t sec = ns / nsec_per_sec;
-    uint64_t nsec = ns % nsec_per_sec;
-    if (sec > max_sec) {
-        sec = max_sec;
-        nsec = nsec_per_sec - 1;
+inline Semaphore::Semaphore(std::intptr_t value) {
+    if (value < 0) {
+        throw std::invalid_argument("Semaphore starting value may not be less than zero");
     }
-    return mach_timespec_t{static_cast<unsigned int>(sec), static_cast<clock_res_t>(nsec)};
-}
 
-/// A zero `mach_timespec_t`
-inline constexpr mach_timespec_t timespec_zero{0, 0};
-
-/// A `std::error_category` for mach return values
-class mach_error_category : public std::error_category {
-  public:
-    const char *name() const noexcept override { return "mach"; }
-    std::string message(int condition) const override {
-        return mach_error_string(static_cast<mach_error_t>(condition));
-    }
-};
-
-/// The shared `mach_error_category` instance
-inline const std::error_category &mach_category() {
-    static mach_error_category instance;
-    return instance;
-}
-
-/// Returns a `std::error_code` for the given kernel return value
-inline std::error_code mach_error_code(kern_return_t kr) {
-    return std::error_code(static_cast<int>(kr), mach_category());
-}
-
-} /* namespace detail */
-
-inline Semaphore::Semaphore(int value) {
-    const auto kr = semaphore_create(mach_task_self(), &semaphore_, SYNC_POLICY_FIFO, value);
-    if (kr != KERN_SUCCESS) {
-        throw std::system_error(detail::mach_error_code(kr), "Unable to create mach semaphore");
+    semaphore_ = dispatch_semaphore_create(value);
+    if (semaphore_ == nullptr) {
+        throw std::runtime_error("Unable to create dispatch semaphore");
     }
 }
 
-inline Semaphore::~Semaphore() noexcept {
-    [[maybe_unused]] const auto kr = semaphore_destroy(mach_task_self(), semaphore_);
-    assert(kr == KERN_SUCCESS);
-}
-
-inline void Semaphore::wait() noexcept {
-    kern_return_t kr;
-    do {
-        kr = semaphore_wait(semaphore_);
-    } while (__builtin_expect(kr == KERN_ABORTED, 0));
-    assert(kr == KERN_SUCCESS);
-}
+inline void Semaphore::wait() noexcept { dispatch_semaphore_wait(semaphore_, DISPATCH_TIME_FOREVER); }
 
 inline bool Semaphore::wait(std::chrono::nanoseconds timeout) noexcept {
-    const auto deadline =
-            timeout > std::chrono::nanoseconds::zero()
-                    ? host_time::current() + host_time::fromNanoseconds(static_cast<uint64_t>(timeout.count()))
-                    : uint64_t{0};
-
-    for (;;) {
-        const auto now = host_time::current();
-        const auto waitTime = now >= deadline ? detail::timespec_zero
-                                              : detail::nsec_to_timespec(host_time::toNanoseconds(deadline - now));
-        const auto kr = semaphore_timedwait(semaphore_, waitTime);
-        if (kr == KERN_ABORTED) [[unlikely]] {
-            continue;
-        }
-        // Other results indicate an invalid or destroyed semaphore
-        assert(kr == KERN_SUCCESS || kr == KERN_OPERATION_TIMED_OUT);
-        return kr == KERN_SUCCESS;
+    if (timeout <= std::chrono::nanoseconds::zero()) {
+        return dispatch_semaphore_wait(semaphore_, DISPATCH_TIME_NOW) == 0;
     }
+    return dispatch_semaphore_wait(semaphore_, dispatch_time(DISPATCH_TIME_NOW, timeout.count())) == 0;
 }
 
-inline bool Semaphore::signal() noexcept { return semaphore_signal(semaphore_) == KERN_SUCCESS; }
+inline bool Semaphore::signal() noexcept { return dispatch_semaphore_signal(semaphore_) != 0; }
 
-} /* namespace msema */
+} /* namespace dsema */
