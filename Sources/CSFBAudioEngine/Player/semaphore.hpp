@@ -42,9 +42,7 @@ class Semaphore final {
     /// Waits for (decrements) the semaphore.
     ///
     /// If the resulting value is less than zero this function waits for a signal to occur before returning.
-    /// @param timeout The earliest time at which the function will stop waiting.
-    /// @return true if the semaphore was decremented, false otherwise.
-    bool wait(dispatch_time_t timeout) noexcept;
+    void wait() noexcept;
 
     /// Waits for (decrements) the semaphore.
     ///
@@ -58,11 +56,6 @@ class Semaphore final {
     /// If the previous value was less than zero, this function wakes a waiting thread.
     /// @return true if a thread was woken, false otherwise
     bool signal() noexcept;
-
-    /// Waits for (decrements) the semaphore.
-    ///
-    /// If the resulting value is less than zero this function waits for a signal to occur before returning.
-    void wait() noexcept;
 
   private:
     /// The underlying dispatch semaphore.
@@ -82,19 +75,15 @@ inline Semaphore::Semaphore(std::intptr_t value) {
     }
 }
 
-inline bool Semaphore::wait(dispatch_time_t timeout) noexcept {
-    return dispatch_semaphore_wait(semaphore_, timeout) == 0;
-}
+inline void Semaphore::wait() noexcept { dispatch_semaphore_wait(semaphore_, DISPATCH_TIME_FOREVER); }
 
 inline bool Semaphore::wait(std::chrono::nanoseconds timeout) noexcept {
     if (timeout <= std::chrono::nanoseconds::zero()) {
-        return wait(DISPATCH_TIME_NOW);
+        return dispatch_semaphore_wait(semaphore_, DISPATCH_TIME_NOW) == 0;
     }
-    return wait(dispatch_time(DISPATCH_TIME_NOW, timeout.count()));
+    return dispatch_semaphore_wait(semaphore_, dispatch_time(DISPATCH_TIME_NOW, timeout.count())) == 0;
 }
 
 inline bool Semaphore::signal() noexcept { return dispatch_semaphore_signal(semaphore_) != 0; }
-
-inline void Semaphore::wait() noexcept { wait(DISPATCH_TIME_FOREVER); }
 
 } /* namespace dsema */
