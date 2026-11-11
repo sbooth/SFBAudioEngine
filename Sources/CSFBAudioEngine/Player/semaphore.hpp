@@ -72,7 +72,7 @@ namespace detail {
 /// The number of nanoseconds in one second.
 inline constexpr uint64_t nsec_per_sec = 1'000'000'000;
 
-/// Converts a nanosecond count to a mach_timespec_t, clamping tv_sec to fit in an unsigned int.
+/// Converts a nanosecond count to a `mach_timespec_t`, clamping `tv_sec` to fit in an `unsigned int`.
 [[nodiscard]] constexpr mach_timespec_t nsec_to_timespec(uint64_t ns) noexcept {
     constexpr uint64_t max_sec = std::numeric_limits<unsigned int>::max();
     uint64_t sec = ns / nsec_per_sec;
@@ -84,10 +84,10 @@ inline constexpr uint64_t nsec_per_sec = 1'000'000'000;
     return mach_timespec_t{static_cast<unsigned int>(sec), static_cast<clock_res_t>(nsec)};
 }
 
-/// A zero mach_timespec_t
+/// A zero `mach_timespec_t`
 inline constexpr mach_timespec_t timespec_zero{0, 0};
 
-/// A std::error_category for mach return values
+/// A `std::error_category` for mach return values
 class mach_error_category : public std::error_category {
   public:
     const char *name() const noexcept override { return "mach"; }
@@ -96,13 +96,13 @@ class mach_error_category : public std::error_category {
     }
 };
 
-/// The shared mach_error_category instance
+/// The shared `mach_error_category` instance
 inline const std::error_category &mach_category() {
     static mach_error_category instance;
     return instance;
 }
 
-/// Returns a std::error_code for the given kernel return value
+/// Returns a `std::error_code` for the given kernel return value
 inline std::error_code mach_error_code(kern_return_t kr) {
     return std::error_code(static_cast<int>(kr), mach_category());
 }
