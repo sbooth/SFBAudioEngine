@@ -32,6 +32,8 @@
 #import "host_time.hpp"
 #import "scope_exit.hpp"
 
+#define SFB_AUDIO_PLAYER_TELEMETRY 1
+
 /// Set to 1 to emit `os_signpost` telemetry
 #ifndef SFB_AUDIO_PLAYER_TELEMETRY
 #define SFB_AUDIO_PLAYER_TELEMETRY 0
@@ -1991,7 +1993,8 @@ void sfb::AudioPlayer::processEvents(std::stop_token stoken) noexcept {
         EventCommand eventCommand;
         while (events_.peek(eventCommand)) {
 #if SFB_AUDIO_PLAYER_TELEMETRY
-            os_signpost_interval_begin(log_, signpostID, "Process Event", "command=%u", static_cast<uint32_t>(eventCommand));
+            os_signpost_interval_begin(log_, signpostID, "Process Event", "command=%u",
+                                       static_cast<uint32_t>(eventCommand));
 #endif /* SFB_AUDIO_PLAYER_TELEMETRY */
 
             switch (eventCommand) {
