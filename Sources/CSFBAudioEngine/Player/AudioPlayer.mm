@@ -32,8 +32,6 @@
 #import "host_time.hpp"
 #import "scope_exit.hpp"
 
-#define SFB_AUDIO_PLAYER_TELEMETRY 1
-
 /// Set to 1 to emit `os_signpost` telemetry
 #ifndef SFB_AUDIO_PLAYER_TELEMETRY
 #define SFB_AUDIO_PLAYER_TELEMETRY 0
