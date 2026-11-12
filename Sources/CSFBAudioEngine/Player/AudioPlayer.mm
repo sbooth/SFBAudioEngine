@@ -8,6 +8,7 @@
 #import "AudioPlayer.h"
 
 #import <objc/runtime.h>
+#import <os/signpost.h>
 
 #import <algorithm>
 #import <atomic>
@@ -30,6 +31,11 @@
 #import "SFBCStringForOSType.h"
 #import "host_time.hpp"
 #import "scope_exit.hpp"
+
+/// Set to 1 to emit `os_signpost` telemetry
+#ifndef SFB_AUDIO_PLAYER_TELEMETRY
+#define SFB_AUDIO_PLAYER_TELEMETRY 0
+#endif /* !SFB_AUDIO_PLAYER_TELEMETRY */
 
 namespace {
 
@@ -278,6 +284,13 @@ const char *playbackStateDescription(SFBAudioPlayerPlaybackState playbackState) 
     }
 }
 #endif /* !NDEBUG */
+
+#if SFB_AUDIO_PLAYER_TELEMETRY
+/// Returns the signpost ID for a frames rendered event
+os_signpost_id_t framesRenderedSignpostID(const void *player, uint64_t sequenceNumber, uint64_t eventTime) noexcept {
+    return reinterpret_cast<uintptr_t>(player) ^ (sequenceNumber << 48) ^ eventTime;
+}
+#endif /* SFB_AUDIO_PLAYER_TELEMETRY */
 
 } /* namespace */
 
@@ -1755,6 +1768,15 @@ bool sfb::AudioPlayer::shouldBeProcessingDecoders() const noexcept {
 
 OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timestamp, AVAudioFrameCount frameCount,
                                   AudioBufferList &outputData) noexcept {
+#if SFB_AUDIO_PLAYER_TELEMETRY
+    const auto signpostID = os_signpost_id_make_with_pointer(log_, this);
+    os_signpost_interval_begin(log_, signpostID, "Render", "frameCount=%u", frameCount);
+    uint32_t signpostFramesRead{0};
+    const auto defer = util::scope_exit{[&]() noexcept {
+        os_signpost_interval_end(log_, signpostID, "Render", "framesRead=%u", signpostFramesRead);
+    }};
+#endif /* SFB_AUDIO_PLAYER_TELEMETRY */
+
     const auto flags = loadFlags();
     const auto isStale = bits::is_set(flags, Flags::audioStale);
 
@@ -1800,6 +1822,9 @@ OSStatus sfb::AudioPlayer::render(BOOL &isSilence, const AudioTimeStamp &timesta
 
     // Read audio from the ring buffer
     const auto framesRead = static_cast<uint32_t>(audioBuffer_.read(outputData, frameCount));
+#if SFB_AUDIO_PLAYER_TELEMETRY
+    signpostFramesRead = framesRead;
+#endif /* SFB_AUDIO_PLAYER_TELEMETRY */
 
     // Enqueue frames rendered event(s)
     if (framesRead > 0) [[likely]] {
@@ -1865,12 +1890,20 @@ bool sfb::AudioPlayer::enqueueFramesRenderedEvents(uint32_t framesRead, const Au
         const auto eventTime = hostTimeForFrameOffset(frameOffset, timestamp, sampleRate);
         const auto completionTime =
                 isFinal ? hostTimeForFrameOffset(frameOffset + chunkFramesConsumed, timestamp, sampleRate) : 0;
+#if SFB_AUDIO_PLAYER_TELEMETRY
+        // Begin before enqueuing so the event processing thread cannot end the interval first
+        const auto signpostID = framesRenderedSignpostID(this, chunkSequenceNumber, eventTime);
+        os_signpost_interval_begin(log_, signpostID, "Frames Rendered Event", "frameCount=%u", chunkFramesConsumed);
+#endif /* SFB_AUDIO_PLAYER_TELEMETRY */
         if (events_.enqueue(EventCommand::framesRendered, chunkSequenceNumber, chunkFramesConsumed,
                             renderingChunk_->descriptor_.playbackGeneration_, eventTime, completionTime, isFinal))
                 [[likely]] {
             eventEnqueued = true;
         } else {
             setFlags(Flags::renderEventDropped);
+#if SFB_AUDIO_PLAYER_TELEMETRY
+            os_signpost_interval_end(log_, signpostID, "Frames Rendered Event", "dropped");
+#endif /* SFB_AUDIO_PLAYER_TELEMETRY */
         }
 
         // Accounting
@@ -1899,11 +1932,19 @@ bool sfb::AudioPlayer::enqueueEmptyFramesRenderedEvent(const AudioTimeStamp &tim
 
         // Rendering is complete
         const auto eventTime = hostTimeForFrameOffset(0, timestamp, audioBuffer_.format().mSampleRate);
+#if SFB_AUDIO_PLAYER_TELEMETRY
+        // Begin before enqueuing so the event processing thread cannot end the interval first
+        const auto signpostID = framesRenderedSignpostID(this, chunkDescriptor.sequenceNumber_, eventTime);
+        os_signpost_interval_begin(log_, signpostID, "Frames Rendered Event", "frameCount=%u", uint32_t{0});
+#endif /* SFB_AUDIO_PLAYER_TELEMETRY */
         if (events_.enqueue(EventCommand::framesRendered, chunkDescriptor.sequenceNumber_, uint32_t{0},
                             chunkDescriptor.playbackGeneration_, eventTime, eventTime, true)) [[likely]] {
             eventEnqueued = true;
         } else {
             setFlags(Flags::renderEventDropped);
+#if SFB_AUDIO_PLAYER_TELEMETRY
+            os_signpost_interval_end(log_, signpostID, "Frames Rendered Event", "dropped");
+#endif /* SFB_AUDIO_PLAYER_TELEMETRY */
         }
 
         // Chunk processing complete
@@ -1925,9 +1966,18 @@ void sfb::AudioPlayer::processEvents(std::stop_token stoken) noexcept {
     os_log_debug(log_, "<AudioPlayer: %p> event processing thread starting", this);
 #endif /* !NDEBUG */
 
+#if SFB_AUDIO_PLAYER_TELEMETRY
+    const auto signpostID = os_signpost_id_make_with_pointer(log_, this);
+#endif /* SFB_AUDIO_PLAYER_TELEMETRY */
+
     while (!stoken.stop_requested()) {
         // Clear before draining so an event enqueued during the drain is followed by a new signal
         eventSignaled_.exchange(false, std::memory_order_acq_rel);
+
+#if SFB_AUDIO_PLAYER_TELEMETRY
+        os_signpost_interval_begin(log_, signpostID, "Process Events");
+        uint32_t signpostEventCount = 0;
+#endif /* SFB_AUDIO_PLAYER_TELEMETRY */
 
 #ifndef NDEBUG
         if (const auto occupancy =
@@ -1940,6 +1990,10 @@ void sfb::AudioPlayer::processEvents(std::stop_token stoken) noexcept {
         // Process pending events
         EventCommand eventCommand;
         while (events_.peek(eventCommand)) {
+#if SFB_AUDIO_PLAYER_TELEMETRY
+            os_signpost_interval_begin(log_, signpostID, "Process Event", "command=%u", static_cast<uint32_t>(eventCommand));
+#endif /* SFB_AUDIO_PLAYER_TELEMETRY */
+
             switch (eventCommand) {
             case EventCommand::decodingStarted:
                 processDecodingStartedEvent();
@@ -1971,7 +2025,16 @@ void sfb::AudioPlayer::processEvents(std::stop_token stoken) noexcept {
                 os_log_error(log_, "Unknown event command: %u", static_cast<uint32_t>(eventCommand));
                 break;
             }
+
+#if SFB_AUDIO_PLAYER_TELEMETRY
+            os_signpost_interval_end(log_, signpostID, "Process Event");
+            ++signpostEventCount;
+#endif /* SFB_AUDIO_PLAYER_TELEMETRY */
         }
+
+#if SFB_AUDIO_PLAYER_TELEMETRY
+        os_signpost_interval_end(log_, signpostID, "Process Events", "eventCount=%u", signpostEventCount);
+#endif /* SFB_AUDIO_PLAYER_TELEMETRY */
 
         if (const auto prevFlags = clearFlags(Flags::renderEventDropped);
             bits::is_set(prevFlags, Flags::renderEventDropped)) {
@@ -2262,6 +2325,10 @@ bool sfb::AudioPlayer::processFramesRenderedEvent() noexcept {
 
     assert(command == EventCommand::framesRendered);
     assert(frameCount > 0 || isFinal);
+
+#if SFB_AUDIO_PLAYER_TELEMETRY
+    os_signpost_interval_end(log_, framesRenderedSignpostID(this, sequenceNumber, eventTime), "Frames Rendered Event");
+#endif /* SFB_AUDIO_PLAYER_TELEMETRY */
 
     // If a frames rendered event was posted it means valid frames were rendered
     // during that render cycle, or that a decoder's empty final chunk was reached.
