@@ -5,33 +5,29 @@
 // Part of https://github.com/sbooth/SFBAudioEngine
 //
 
+#import <cassert>
+#import <cstdio>
+
 #import <ImageIO/ImageIO.h>
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
-
-#import <cstdio>
-#import <memory>
 
 #import <taglib/mp4coverart.h>
 
 #import "SFBAudioMetadata+TagLibMP4Tag.h"
 #import "SFBAudioMetadata+TagLibTag.h"
 #import "TagLibStringUtilities.h"
+#import "unique_ref.hpp"
 
 namespace {
 
-/// A `std::unique_ptr` deleter for `CFTypeRef` objects
-struct cf_type_ref_deleter {
-    void operator()(CFTypeRef CF_RELEASES_ARGUMENT cf) noexcept { CFRelease(cf); }
-};
-
-using cg_image_source_unique_ptr = std::unique_ptr<CGImageSource, cf_type_ref_deleter>;
+using unique_cg_image_source = util::unique_ref<CGImageSource, CFRelease>;
 
 } /* namespace */
 
 @implementation SFBAudioMetadata (TagLibMP4Tag)
 
 - (void)addMetadataFromTagLibMP4Tag:(const TagLib::MP4::Tag *)tag {
-    NSParameterAssert(tag != nil);
+    assert(tag != nil);
 
     // Add the basic tags not specific to MP4
     [self addMetadataFromTagLibTag:tag];
@@ -291,7 +287,7 @@ void sfb::setMP4TagFromMetadata(SFBAudioMetadata *metadata, TagLib::MP4::Tag *ta
     if (setAlbumArt) {
         auto list = TagLib::MP4::CoverArtList();
         for (SFBAttachedPicture *attachedPicture in metadata.attachedPictures) {
-            cg_image_source_unique_ptr imageSource{
+            unique_cg_image_source imageSource{
                     CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr)};
             if (!imageSource) {
                 continue;

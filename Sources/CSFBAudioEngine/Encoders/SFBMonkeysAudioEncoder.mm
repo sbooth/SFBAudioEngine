@@ -7,11 +7,11 @@
 
 #import <os/log.h>
 
-#import <AudioToolbox/AudioToolbox.h>
-
 #import <algorithm>
 #import <exception>
 #import <memory>
+
+#import <AudioToolbox/AudioToolbox.h>
 
 #define PLATFORM_APPLE
 
@@ -174,9 +174,9 @@ class APEIOInterface final : public APE::IAPEIO {
     }
 
     APE::WAVEFORMATEX wve;
-    auto result = FillWaveFormatEx(&wve, WAVE_FORMAT_PCM, static_cast<int>(sourceFormat.sampleRate),
-                                   static_cast<int>(sourceFormat.streamDescription->mBitsPerChannel),
-                                   static_cast<int>(sourceFormat.channelCount));
+    const auto result = FillWaveFormatEx(&wve, WAVE_FORMAT_PCM, static_cast<int>(sourceFormat.sampleRate),
+                                         static_cast<int>(sourceFormat.streamDescription->mBitsPerChannel),
+                                         static_cast<int>(sourceFormat.channelCount));
     if (result != ERROR_SUCCESS) {
         os_log_error(gSFBAudioEncoderLog, "FillWaveFormatEx() failed: %d", result);
         return nil;
@@ -207,8 +207,8 @@ class APEIOInterface final : public APE::IAPEIO {
         AudioChannelBitmap channelBitmap = 0;
         UInt32 propertySize = sizeof(channelBitmap);
         AudioChannelLayoutTag layoutTag = sourceFormat.channelLayout.layoutTag;
-        OSStatus status = AudioFormatGetProperty(kAudioFormatProperty_BitmapForLayoutTag, sizeof layoutTag, &layoutTag,
-                                                 &propertySize, &channelBitmap);
+        const OSStatus status = AudioFormatGetProperty(kAudioFormatProperty_BitmapForLayoutTag, sizeof layoutTag,
+                                                       &layoutTag, &propertySize, &channelBitmap);
         if (status == noErr) {
             AudioChannelLayout acl = {.mChannelLayoutTag = kAudioChannelLayoutTag_UseChannelBitmap,
                                       .mChannelBitmap = channelBitmap,
@@ -331,8 +331,8 @@ class APEIOInterface final : public APE::IAPEIO {
         return YES;
     }
 
-    auto bytesToWrite = frameLength * _processingFormat.streamDescription->mBytesPerFrame;
-    auto result = _compressor->AddData((unsigned char *)buffer.audioBufferList->mBuffers[0].mData, bytesToWrite);
+    const auto bytesToWrite = frameLength * _processingFormat.streamDescription->mBytesPerFrame;
+    const auto result = _compressor->AddData((unsigned char *)buffer.audioBufferList->mBuffers[0].mData, bytesToWrite);
     if (result != ERROR_SUCCESS) {
         os_log_error(gSFBAudioEncoderLog, "_compressor->AddData() failed: %lld", result);
         if (error != nullptr) {
@@ -349,7 +349,7 @@ class APEIOInterface final : public APE::IAPEIO {
 }
 
 - (BOOL)finishEncodingReturningError:(NSError **)error {
-    auto result = _compressor->Finish(nullptr, 0, 0);
+    const auto result = _compressor->Finish(nullptr, 0, 0);
     if (result != ERROR_SUCCESS) {
         os_log_error(gSFBAudioEncoderLog, "_compressor->Finish() failed: %d", result);
         if (error != nullptr) {

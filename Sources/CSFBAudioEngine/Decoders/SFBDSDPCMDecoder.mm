@@ -9,11 +9,11 @@
 
 #import <os/log.h>
 
-#import <Accelerate/Accelerate.h>
-
 #import <algorithm>
 #import <cstdint>
 #import <vector>
+
+#import <Accelerate/Accelerate.h>
 
 #import "SFBAudioDecoder+Internal.h"
 #import "SFBDSDDecoder.h"
@@ -419,22 +419,22 @@ class DXD {
     const float linearGain = _linearGain;
 
     for (;;) {
-        AVAudioFrameCount framesRemaining = frameLength - framesRead;
+        const AVAudioFrameCount framesRemaining = frameLength - framesRead;
 
         // Grab the DSD audio
-        AVAudioPacketCount dsdPacketsRemaining = framesRemaining * kDSDPacketsPerPCMFrame;
+        const AVAudioPacketCount dsdPacketsRemaining = framesRemaining * kDSDPacketsPerPCMFrame;
         if (![_decoder decodeIntoBuffer:_buffer
                             packetCount:std::min(_buffer.packetCapacity, dsdPacketsRemaining)
                                   error:error]) {
             return NO;
         }
 
-        AVAudioPacketCount dsdPacketsDecoded = _buffer.packetCount;
+        const AVAudioPacketCount dsdPacketsDecoded = _buffer.packetCount;
         if (dsdPacketsDecoded == 0) {
             break;
         }
 
-        AVAudioFrameCount framesDecoded = dsdPacketsDecoded / kDSDPacketsPerPCMFrame;
+        const AVAudioFrameCount framesDecoded = dsdPacketsDecoded / kDSDPacketsPerPCMFrame;
 
         // Convert to PCM
         // NB: Currently DSDIFFDecoder and DSFDecoder only produce interleaved output

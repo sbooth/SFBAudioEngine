@@ -7,9 +7,9 @@
 
 #import "SFBFileOutputTarget.h"
 
-#import "SFBOutputTarget+Internal.h"
-
 #import <stdio.h>
+
+#import "SFBOutputTarget+Internal.h"
 
 @interface SFBFileOutputTarget () {
   @private
@@ -22,7 +22,7 @@
 - (BOOL)openReturningError:(NSError **)error {
     _file = fopen(_url.fileSystemRepresentation, "w+");
     if (!_file) {
-        int err = errno;
+        const int err = errno;
         os_log_error(gSFBOutputTargetLog, "fopen failed: %{public}s (%d)", strerror(err), err);
         if (error) {
             *error = [self posixErrorWithCode:err];
@@ -35,10 +35,10 @@
 
 - (BOOL)closeReturningError:(NSError **)error {
     if (_file) {
-        int result = fclose(_file);
+        const int result = fclose(_file);
         _file = NULL;
         if (result) {
-            int err = errno;
+            const int err = errno;
             os_log_error(gSFBOutputTargetLog, "fclose failed: %{public}s (%d)", strerror(err), err);
             if (error) {
                 *error = [self posixErrorWithCode:err];
@@ -58,9 +58,9 @@
     NSParameterAssert(length >= 0);
     NSParameterAssert(bytesRead != NULL);
 
-    size_t read = fread(buffer, 1, (size_t)length, _file);
+    const size_t read = fread(buffer, 1, (size_t)length, _file);
     if (read != (size_t)length && ferror(_file)) {
-        int err = errno;
+        const int err = errno;
         os_log_error(gSFBOutputTargetLog, "fread error: %{public}s (%d)", strerror(err), err);
         if (error) {
             *error = [self posixErrorWithCode:err];
@@ -79,9 +79,9 @@
     NSParameterAssert(length >= 0);
     NSParameterAssert(bytesWritten != NULL);
 
-    size_t written = fwrite(buffer, 1, (size_t)length, _file);
+    const size_t written = fwrite(buffer, 1, (size_t)length, _file);
     if (written != (size_t)length) {
-        int err = errno;
+        const int err = errno;
         os_log_error(gSFBOutputTargetLog, "fwrite error: %{public}s (%d)", strerror(err), err);
         if (error) {
             *error = [self posixErrorWithCode:err];
@@ -98,9 +98,9 @@
 
 - (BOOL)getOffset:(NSInteger *)offset error:(NSError **)error {
     NSParameterAssert(offset != NULL);
-    off_t result = ftello(_file);
+    const off_t result = ftello(_file);
     if (result == -1) {
-        int err = errno;
+        const int err = errno;
         os_log_error(gSFBOutputTargetLog, "ftello failed: %{public}s (%d)", strerror(err), err);
         if (error) {
             *error = [self posixErrorWithCode:err];
@@ -113,9 +113,9 @@
 
 - (BOOL)getLength:(NSInteger *)length error:(NSError **)error {
     NSParameterAssert(length != NULL);
-    off_t offset = ftello(_file);
+    const off_t offset = ftello(_file);
     if (offset == -1) {
-        int err = errno;
+        const int err = errno;
         os_log_error(gSFBOutputTargetLog, "ftello failed: %{public}s (%d)", strerror(err), err);
         if (error) {
             *error = [self posixErrorWithCode:err];
@@ -124,7 +124,7 @@
     }
 
     if (fseeko(_file, 0, SEEK_END)) {
-        int err = errno;
+        const int err = errno;
         os_log_error(gSFBOutputTargetLog, "fseeko(0, SEEK_END) error: %{public}s (%d)", strerror(err), err);
         if (error) {
             *error = [self posixErrorWithCode:err];
@@ -132,9 +132,9 @@
         return NO;
     }
 
-    off_t len = ftello(_file);
+    const off_t len = ftello(_file);
     if (len == -1) {
-        int err = errno;
+        const int err = errno;
         os_log_error(gSFBOutputTargetLog, "ftello failed: %{public}s (%d)", strerror(err), err);
         if (error) {
             *error = [self posixErrorWithCode:err];
@@ -143,7 +143,7 @@
     }
 
     if (fseeko(_file, offset, SEEK_SET)) {
-        int err = errno;
+        const int err = errno;
         os_log_error(gSFBOutputTargetLog, "fseeko(%ld, SEEK_SET) error: %{public}s (%d)", (long)offset, strerror(err),
                      err);
         if (error) {
@@ -163,7 +163,7 @@
 
 - (BOOL)seekToOffset:(NSInteger)offset error:(NSError **)error {
     if (fseeko(_file, offset, SEEK_SET)) {
-        int err = errno;
+        const int err = errno;
         os_log_error(gSFBOutputTargetLog, "fseeko(%ld, SEEK_SET) error: %{public}s (%d)", (long)offset, strerror(err),
                      err);
         if (error) {

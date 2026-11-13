@@ -38,6 +38,16 @@ typedef NS_ENUM(NSUInteger, SFBAudioPlayerPlaybackState) {
     SFBAudioPlayerPlaybackStatePlaying = 3,
 } NS_SWIFT_NAME(AudioPlayer.PlaybackState);
 
+/// The possible actions `SFBAudioPlayer` can take when rendering is complete for all available decoders
+typedef NS_ENUM(NSInteger, SFBAudioPlayerEndOfAudioAction) {
+    /// Stop playback, ending the playback session and stopping the `AVAudioEngine`
+    SFBAudioPlayerEndOfAudioActionStop = 0,
+    /// Pause playback, retaining the playback session and pausing the `AVAudioEngine`
+    SFBAudioPlayerEndOfAudioActionPause = 1,
+    /// Continue playback with the `AVAudioEngine` running
+    SFBAudioPlayerEndOfAudioActionContinue = 2,
+} NS_SWIFT_NAME(AudioPlayer.EndOfAudioAction);
+
 /// An audio player using an `AVAudioEngine` processing graph for playback
 ///
 /// `SFBAudioPlayer` supports gapless playback for audio with the same sample rate and number of channels.
@@ -87,9 +97,9 @@ NS_SWIFT_NAME(AudioPlayer)
 - (BOOL)playURL:(NSURL *)url error:(NSError **)error NS_SWIFT_NAME(play(_:));
 /// Cancels the current decoder, clears any queued decoders, enqueues a decoder, and starts playback
 /// - important: The player takes exclusive ownership of the decoder once enqueued. Further use of the decoder after a
-/// successful enqueue operation is undefined.
+///   successful enqueue operation is undefined.
 /// - note: The decoder is opened in the decoding thread if required before the decoding process begins. Any errors that
-/// occur during opening are reported asynchronously to the delegate.
+///   occur during opening are reported asynchronously to the delegate.
 /// - parameter decoder: The decoder to play
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` if the decoder was enqueued and playback started successfully
@@ -105,10 +115,10 @@ NS_SWIFT_NAME(AudioPlayer)
 /// Creates and enqueues a decoder for subsequent playback, optionally canceling the current decoder and clearing any
 /// queued decoders
 /// - note: The decoder is opened in the decoding thread before the decoding process begins. Any errors that occur
-/// during opening are reported asynchronously to the delegate.
+///   during opening are reported asynchronously to the delegate.
 /// - parameter url: The URL to enqueue
 /// - parameter forImmediatePlayback: If `YES` the current decoder is canceled and any queued decoders are cleared
-/// before enqueuing
+///   before enqueuing
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` if a decoder was created and enqueued successfully
 - (BOOL)enqueueURL:(NSURL *)url
@@ -116,9 +126,9 @@ NS_SWIFT_NAME(AudioPlayer)
                        error:(NSError **)error NS_SWIFT_NAME(enqueue(_:immediate:));
 /// Enqueues a decoder for subsequent playback
 /// - important: The player takes exclusive ownership of the decoder once enqueued. Further use of the decoder after a
-/// successful enqueue operation is undefined.
+///   successful enqueue operation is undefined.
 /// - note: The decoder is opened in the decoding thread if required before the decoding process begins. Any errors that
-/// occur during opening are reported asynchronously to the delegate.
+///   occur during opening are reported asynchronously to the delegate.
 /// - parameter decoder: The decoder to enqueue
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` if the decoder was enqueued successfully
@@ -126,12 +136,12 @@ NS_SWIFT_NAME(AudioPlayer)
 /// Enqueues a decoder for subsequent playback, optionally canceling the current decoder and clearing any queued
 /// decoders
 /// - important: The player takes exclusive ownership of the decoder once enqueued. Further use of the decoder after a
-/// successful enqueue operation is undefined.
+///   successful enqueue operation is undefined.
 /// - note: The decoder is opened in the decoding thread if required before the decoding process begins. Any errors that
-/// occur during opening are reported asynchronously to the delegate.
+///   occur during opening are reported asynchronously to the delegate.
 /// - parameter decoder: The decoder to enqueue
 /// - parameter forImmediatePlayback: If `YES` the current decoder is canceled and any queued decoders are cleared
-/// before enqueuing
+///   before enqueuing
 /// - parameter error: An optional pointer to an `NSError` object to receive error information
 /// - returns: `YES` if the decoder was enqueued successfully
 - (BOOL)enqueueDecoder:(id<SFBPCMDecoding>)decoder
@@ -181,12 +191,17 @@ NS_SWIFT_NAME(AudioPlayer)
 /// Cancels the current decoder, clears any queued decoders, and resets the `AVAudioEngine`
 - (void)reset;
 
+/// The action the player takes when rendering is complete for all available decoders
+///
+/// The default is `SFBAudioPlayerEndOfAudioActionStop`.
+@property(nonatomic) SFBAudioPlayerEndOfAudioAction endOfAudioAction;
+
 // MARK: - Player State
 
 /// `YES` if the `AVAudioEngine` is running
 /// - note: The engine runs only while the player is playing. It may briefly differ from the playback state, for
-/// example while the processing graph is reconfigured, or after the player pauses while audio already sent to the
-/// output finishes playing
+///   example while the processing graph is reconfigured, or after the player pauses while audio already sent to the
+///   output finishes playing
 @property(nonatomic, readonly) BOOL engineIsRunning;
 
 /// The current playback state
@@ -229,7 +244,7 @@ NS_SWIFT_NAME(AudioPlayer)
 
 /// Retrieves the playback position and time from the current decoder
 /// - parameter playbackPosition: An optional pointer to an `SFBPlaybackPosition` struct to receive playback position
-/// information
+///   information
 /// - parameter playbackTime: An optional pointer to an `SFBPlaybackTime` struct to receive playback time information
 /// - returns: `NO` if the current playback snapshot is invalid
 - (BOOL)getPlaybackPosition:(nullable SFBPlaybackPosition *)playbackPosition
@@ -317,7 +332,9 @@ NS_SWIFT_NAME(AudioPlayer)
 /// Calls `block` from a context safe to perform operations on the `AVAudioEngine` processing graph
 /// - important: Graph modifications may only be made between `sourceNode` and `engine.mainMixerNode`
 /// - attention: The audio engine must not be started or stopped directly; use the player's playback control methods
-/// instead. Directly starting or stopping the engine may cause internal state inconsistencies.
+///   instead. Directly starting or stopping the engine may cause internal state inconsistencies.
+/// - warning: `block` must not call any methods on the player other than `sourceNode`. `block` is called while
+///   the player holds a lock that other methods may acquire, and calling them may crash or deadlock.
 /// - parameter block: A block performing operations on the `AVAudioEngine`
 - (void)modifyProcessingGraph:(SFBAudioPlayerAVAudioEngineBlock)block;
 /// The audio processing graph's source node
@@ -405,8 +422,8 @@ NS_SWIFT_NAME(AudioPlayer.Delegate)
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer playbackStateChanged:(SFBAudioPlayerPlaybackState)playbackState;
 /// Called to notify the delegate when rendering is complete for all available decoders
 ///
-/// If the delegate implements this method the playback session remains active, so audio enqueued afterward will play
-/// without a call to ``-playReturningError:``. If the delegate does not implement this method the player is stopped.
+/// This method is called after the player performs the action specified by ``-[SFBAudioPlayer endOfAudioAction]``,
+/// so the delegate may enqueue additional audio or change the playback state in response.
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
 - (void)audioPlayerEndOfAudio:(SFBAudioPlayer *)audioPlayer NS_SWIFT_NAME(audioPlayerEndOfAudio(_:));
 /// Called to notify the delegate after performing a user-initiated seek in a decoder
@@ -451,8 +468,10 @@ NS_SWIFT_NAME(AudioPlayer.Delegate)
 ///
 /// After this method returns the source node will be connected to the returned node using the specified format.
 /// - important: This method is called from a context where it is safe to modify `engine`
+/// - warning: This method must not call any methods on `audioPlayer` other than `sourceNode`. It is called while
+///   the player holds a lock that other methods may acquire, and calling them may crash or deadlock.
 /// - note: This method is only called when one or more nodes have been inserted between the source node and main mixer
-/// node.
+///   node.
 /// - parameter audioPlayer: The `SFBAudioPlayer` object
 /// - parameter engine: The `AVAudioEngine` object
 /// - parameter format: The rendering format of the source node
