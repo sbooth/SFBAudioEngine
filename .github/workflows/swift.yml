@@ -16,7 +16,22 @@ jobs:
           xcode-version: latest-stable
       - name: Checkout
         uses: actions/checkout@v7
-      - name: Build
+      # macOS
+      - name: Build for macOS
         run: swift build -v
-      - name: Run tests
+      - name: Run tests for macOS
         run: swift test -v
+      # iOS
+      - name: Build for iOS
+        run: |
+          xcodebuild build \
+            -scheme SFBAudioEngine \
+            -destination 'generic/platform=iOS' \
+            CODE_SIGNING_ALLOWED=NO
+      # iOS Simulator
+      - name: Build and run tests for iOS simulator
+        run: |
+          xcodebuild test \
+            -scheme SFBAudioEngine \
+            -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+            CODE_SIGNING_ALLOWED=NO
