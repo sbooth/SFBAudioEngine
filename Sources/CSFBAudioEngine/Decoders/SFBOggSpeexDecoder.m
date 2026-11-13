@@ -313,8 +313,10 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
     spx_int32_t speexFrameSize = 0;
     speex_decoder_ctl(_decoder, SPEEX_GET_FRAME_SIZE, &speexFrameSize);
 
-    _buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_processingFormat
-                                            frameCapacity:(AVAudioFrameCount)speexFrameSize];
+    // An Ogg packet may contain multiple Speex frames, all of which are decoded at once
+    _buffer = [[AVAudioPCMBuffer alloc]
+            initWithPCMFormat:_processingFormat
+                frameCapacity:(AVAudioFrameCount)speexFrameSize * (AVAudioFrameCount)_framesPerOggPacket];
 
     return YES;
 }
@@ -430,10 +432,11 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
                         break;
                     }
 
-                    // Ignore the following:
-                    //  - Speex comments in packet #2
-                    //  - Extra headers (optionally) in packets 3+
-                    if (_oggPacketCount != -1 && _extraSpeexHeaderCount + 1 <= _oggPacketCount) {
+                    // Ignore the following (packet numbers are zero-based; packet 0, the Speex header,
+                    // was consumed in -openReturningError:):
+                    //  - Speex comments in packet 1
+                    //  - Extra headers (optionally) in packets 2 through 1 + extra_headers
+                    if (_oggPacketCount != -1 && _oggPacketCount >= _extraSpeexHeaderCount + 2) {
                         // Detect Speex EOS
                         if (oggPacket.e_o_s && _streamState.serialno == _serialNumber) {
                             _eosReached = YES;
@@ -495,18 +498,19 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
                             vDSP_vsdiv(buf, 1, &maxSampleValue, buf, 1,
                                        (vDSP_Length)speexFrameSize * _processingFormat.channelCount);
 
-                            // Copy the frames from the decoding buffer to the output buffer, skipping over any frames
-                            // already decoded
+                            // Append the frames to the intermediate buffer after any frames already decoded from
+                            // this packet
+                            assert(_buffer.frameLength + (AVAudioFrameCount)speexFrameSize <= _buffer.frameCapacity);
 
                             float *output = _buffer.floatChannelData[0] + (_buffer.frameLength * _buffer.stride);
                             memcpy(output, buf,
                                    (size_t)speexFrameSize * _processingFormat.channelCount * sizeof(float));
 
-                            _buffer.frameLength = (AVAudioFrameCount)speexFrameSize;
-
-                            // Packet processing finished
-                            --packetsDesired;
+                            _buffer.frameLength += (AVAudioFrameCount)speexFrameSize;
                         }
+
+                        // Packet processing finished
+                        --packetsDesired;
                     }
 
                     ++_oggPacketCount;
