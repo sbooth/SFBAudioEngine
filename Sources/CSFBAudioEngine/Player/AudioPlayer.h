@@ -216,6 +216,16 @@ class AudioPlayer final {
     static_assert(std::atomic<SFBAudioPlayerEndOfAudioAction>::is_always_lock_free,
                   "Lock-free std::atomic<SFBAudioPlayerEndOfAudioAction> required");
 
+#if !TARGET_OS_IPHONE
+    /// The output device's hardware latency in seconds: its device latency plus the largest latency of its active
+    /// output streams
+    ///
+    /// `AVAudioEngine`'s presentation latency does not always include the stream latency, so the hardware latency is
+    /// computed from the device. This is updated when the engine is started and when the output device is changed, and
+    /// is negative if it could not be determined.
+    std::atomic<double> outputHardwareLatency_{-1};
+#endif /* !TARGET_OS_IPHONE */
+
   public:
     AudioPlayer();
 
@@ -539,6 +549,14 @@ class AudioPlayer final {
 
     /// Dequeues and processes a pause engine event from `events_`
     bool processPauseEngineEvent() noexcept;
+
+    /// Returns the time in seconds from when audio is rendered by the source node to when it is presented at the output
+    double presentationLatency() const noexcept;
+
+#if !TARGET_OS_IPHONE
+    /// Updates `outputHardwareLatency_` for the current output device
+    void updateOutputHardwareLatency() noexcept;
+#endif /* !TARGET_OS_IPHONE */
 
     /// Called when the first audio frame from a decoder will render.
     void handleRenderingWillStart(Decoder _Nonnull decoder, uint64_t hostTime, uint64_t outputGeneration) noexcept;

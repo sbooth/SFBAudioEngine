@@ -127,6 +127,117 @@ NSString *_Nullable audioDeviceName(AUAudioUnit *_Nonnull audioUnit) noexcept {
     }
     return (__bridge_transfer NSString *)name;
 }
+
+/// Returns the output hardware latency of `deviceID` in seconds, or `std::nullopt` if it cannot be determined
+///
+/// The hardware latency is the device latency plus the largest latency of the device's active output streams. Streams
+/// are not matched to the channels in use, so if their latencies differ the result may be slightly high, which is
+/// harmless when scheduling. The safety offset is not included because the render block's timestamps account for it.
+std::optional<double> outputHardwareLatencyForDevice(AudioObjectID deviceID) noexcept {
+    if (deviceID == kAudioObjectUnknown) {
+        return std::nullopt;
+    }
+
+    AudioObjectPropertyAddress address = {.mSelector = kAudioDevicePropertyLatency,
+                                          .mScope = kAudioObjectPropertyScopeOutput,
+                                          .mElement = kAudioObjectPropertyElementMain};
+    UInt32 deviceLatency = 0;
+    UInt32 dataSize = sizeof(deviceLatency);
+    auto status = AudioObjectGetPropertyData(deviceID, &address, 0, nullptr, &dataSize, &deviceLatency);
+    if (status != noErr) {
+        os_log_error(sfb::AudioPlayer::log_,
+                     "AudioObjectGetPropertyData (kAudioDevicePropertyLatency, kAudioObjectPropertyScopeOutput, "
+                     "kAudioObjectPropertyElementMain) failed: %d '%{public}.4s'",
+                     status, SFBCStringForOSType(status));
+        return std::nullopt;
+    }
+
+    address = {.mSelector = kAudioDevicePropertyStreams,
+               .mScope = kAudioObjectPropertyScopeOutput,
+               .mElement = kAudioObjectPropertyElementMain};
+    dataSize = 0;
+    status = AudioObjectGetPropertyDataSize(deviceID, &address, 0, nullptr, &dataSize);
+    if (status != noErr || dataSize < sizeof(AudioObjectID)) {
+        if (status != noErr) {
+            os_log_error(
+                    sfb::AudioPlayer::log_,
+                    "AudioObjectGetPropertyDataSize (kAudioDevicePropertyStreams, kAudioObjectPropertyScopeOutput, "
+                    "kAudioObjectPropertyElementMain) failed: %d '%{public}.4s'",
+                    status, SFBCStringForOSType(status));
+        }
+        return std::nullopt;
+    }
+
+    std::vector<AudioObjectID> streams(dataSize / sizeof(AudioObjectID));
+    status = AudioObjectGetPropertyData(deviceID, &address, 0, nullptr, &dataSize, streams.data());
+    if (status != noErr) {
+        os_log_error(sfb::AudioPlayer::log_,
+                     "AudioObjectGetPropertyData (kAudioDevicePropertyStreams, kAudioObjectPropertyScopeOutput, "
+                     "kAudioObjectPropertyElementMain) failed: %d '%{public}.4s'",
+                     status, SFBCStringForOSType(status));
+        return std::nullopt;
+    }
+    // Streams may have been removed since the size was read. If streams were added they are omitted, since the HAL
+    // returns as many as fit.
+    streams.resize(dataSize / sizeof(AudioObjectID));
+
+    // Use the largest latency of the active output streams. A stream whose latency cannot be read, for example because
+    // it was removed since the stream list was read, is skipped.
+    std::optional<UInt32> streamLatency;
+    for (const auto stream : streams) {
+        // Assume the stream is active unless it reports otherwise
+        address = {.mSelector = kAudioStreamPropertyIsActive,
+                   .mScope = kAudioObjectPropertyScopeGlobal,
+                   .mElement = kAudioObjectPropertyElementMain};
+        UInt32 isActive = 1;
+        dataSize = sizeof(isActive);
+        status = AudioObjectGetPropertyData(stream, &address, 0, nullptr, &dataSize, &isActive);
+        if (status == noErr && isActive == 0) {
+            continue;
+        }
+
+        address = {.mSelector = kAudioStreamPropertyLatency,
+                   .mScope = kAudioObjectPropertyScopeGlobal,
+                   .mElement = kAudioObjectPropertyElementMain};
+        UInt32 latency = 0;
+        dataSize = sizeof(latency);
+        status = AudioObjectGetPropertyData(stream, &address, 0, nullptr, &dataSize, &latency);
+        if (status != noErr) {
+#ifndef NDEBUG
+            os_log_debug(sfb::AudioPlayer::log_,
+                         "AudioObjectGetPropertyData (kAudioStreamPropertyLatency, kAudioObjectPropertyScopeGlobal, "
+                         "kAudioObjectPropertyElementMain) failed for stream %u: %d '%{public}.4s'",
+                         stream, status, SFBCStringForOSType(status));
+#endif /* !NDEBUG */
+            continue;
+        }
+
+        streamLatency = std::max(streamLatency.value_or(0), latency);
+    }
+
+    if (!streamLatency) {
+        os_log_error(sfb::AudioPlayer::log_, "Unable to read the latency of any active output stream");
+        return std::nullopt;
+    }
+
+    address = {.mSelector = kAudioDevicePropertyNominalSampleRate,
+               .mScope = kAudioObjectPropertyScopeGlobal,
+               .mElement = kAudioObjectPropertyElementMain};
+    Float64 sampleRate = 0;
+    dataSize = sizeof(sampleRate);
+    status = AudioObjectGetPropertyData(deviceID, &address, 0, nullptr, &dataSize, &sampleRate);
+    if (status != noErr || sampleRate <= 0) {
+        if (status != noErr) {
+            os_log_error(sfb::AudioPlayer::log_,
+                         "AudioObjectGetPropertyData (kAudioDevicePropertyNominalSampleRate, "
+                         "kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMain) failed: %d '%{public}.4s'",
+                         status, SFBCStringForOSType(status));
+        }
+        return std::nullopt;
+    }
+
+    return static_cast<double>(deviceLatency + *streamLatency) / sampleRate;
+}
 #endif /* !TARGET_OS_IPHONE */
 
 /// Returns true if two AudioChannelLayout structures are equivalent.
@@ -1062,7 +1173,20 @@ bool sfb::AudioPlayer::setOutputDeviceID(AUAudioObjectID outputDeviceID, NSError
         return false;
     }
 
+    updateOutputHardwareLatency();
+
     return true;
+}
+
+void sfb::AudioPlayer::updateOutputHardwareLatency() noexcept {
+    const auto latency = outputHardwareLatencyForDevice(outputDeviceID());
+    outputHardwareLatency_.store(latency.value_or(-1), std::memory_order_relaxed);
+#ifndef NDEBUG
+    if (latency) {
+        os_log_debug(log_, "Output hardware latency %.2f msec (AVAudioEngine reports %.2f msec)", *latency * 1000,
+                     engine_.outputNode.presentationLatency * 1000);
+    }
+#endif /* !NDEBUG */
 }
 
 #endif /* !TARGET_OS_IPHONE */
@@ -2407,7 +2531,7 @@ bool sfb::AudioPlayer::processPauseEngineEvent() noexcept {
     }
 
     // Add the downstream presentation latency to determine when the audio should reach the device
-    hostTime += hostTimeDeltaForSeconds(sourceNode_.outputPresentationLatency);
+    hostTime += hostTimeDeltaForSeconds(presentationLatency());
 
     // Since the engine pause is submitted for asynchronous execution, store a weak reference to the owning
     // SFBAudioPlayer to prevent use-after-free in the event the player is deallocated before the closure is called
@@ -2440,12 +2564,30 @@ bool sfb::AudioPlayer::processPauseEngineEvent() noexcept {
     return true;
 }
 
+double sfb::AudioPlayer::presentationLatency() const noexcept {
+#if TARGET_OS_IPHONE
+    return sourceNode_.outputPresentationLatency;
+#else
+    // The source node's output presentation latency is the processing latency of the nodes following it plus the
+    // output node's presentation latency. The output node's presentation latency is documented to include the device
+    // and stream latencies but may not include the stream latency, so replace it with the hardware latency computed
+    // from the output device when available.
+    const auto hardwareLatency = outputHardwareLatency_.load(std::memory_order_relaxed);
+    if (hardwareLatency < 0) {
+        return sourceNode_.outputPresentationLatency;
+    }
+    const auto graphLatency =
+            std::max(0.0, sourceNode_.outputPresentationLatency - engine_.outputNode.presentationLatency);
+    return graphLatency + hardwareLatency;
+#endif /* TARGET_OS_IPHONE */
+}
+
 void sfb::AudioPlayer::handleRenderingWillStart(Decoder decoder, uint64_t hostTime,
                                                 uint64_t outputGeneration) noexcept {
     assert(decoder != nil);
 
     // Add the downstream presentation latency to determine when the audio should reach the device
-    hostTime += hostTimeDeltaForSeconds(sourceNode_.outputPresentationLatency);
+    hostTime += hostTimeDeltaForSeconds(presentationLatency());
 
     if (const auto now = host_time::current(); now > hostTime) {
         os_log_error(log_, "Rendering start processed %.2f msec late for %{public}@",
@@ -2536,7 +2678,7 @@ void sfb::AudioPlayer::handleRenderingWillComplete(Decoder decoder, uint64_t hos
     assert(decoder != nil);
 
     // Add the downstream presentation latency to determine when the audio should reach the device
-    hostTime += hostTimeDeltaForSeconds(sourceNode_.outputPresentationLatency);
+    hostTime += hostTimeDeltaForSeconds(presentationLatency());
 
     if (const auto now = host_time::current(); now > hostTime) {
         os_log_error(log_, "Rendering complete processed %.2f msec late for %{public}@",
@@ -3028,6 +3170,11 @@ bool sfb::AudioPlayer::startEngineLocked(NSError **error) noexcept {
             }
             return false;
         }
+
+#if !TARGET_OS_IPHONE
+        // The output device or its configuration may have changed while the engine was stopped
+        updateOutputHardwareLatency();
+#endif /* !TARGET_OS_IPHONE */
     }
 
     return true;
