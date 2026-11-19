@@ -21,15 +21,11 @@ jobs:
           set -o pipefail
           xcodebuild build \
             -scheme SFBAudioEngine \
-            -destination 'platform=macOS' \
+            -destination 'generic/platform=macOS' \
             CODE_SIGNING_ALLOWED=NO \
           2>&1 | xcbeautify --renderer github-actions
       - name: Run tests
         run: |
           set -o pipefail
-          xcodebuild test \
-            -scheme SFBAudioEngine \
-            -destination 'platform=macOS' \
-            CODE_SIGNING_ALLOWED=NO \
-          2>&1 | xcbeautify --renderer github-actions
+          swift test 2>&1 | xcbeautify --renderer github-actions
         
