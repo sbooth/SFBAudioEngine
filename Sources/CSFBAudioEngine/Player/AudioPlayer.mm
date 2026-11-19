@@ -1179,8 +1179,8 @@ void sfb::AudioPlayer::updateOutputHardwareLatency() noexcept {
     outputHardwareLatency_.store(latency.value_or(-1), std::memory_order_relaxed);
 #ifndef NDEBUG
     if (latency) {
-        os_log_debug(log_, "Output hardware latency %.2f msec (AVAudioEngine reports %.2f msec)", *latency * 1000,
-                     engine_.outputNode.presentationLatency * 1000);
+        os_log_debug(log_, "Output hardware latency %.2f msec (AVAudioEngine reports %.2f msec)", *latency * 1'000,
+                     engine_.outputNode.presentationLatency * 1'000);
     }
 #endif /* !NDEBUG */
 }
