@@ -41,6 +41,11 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
 
 #define READ_SIZE_BYTES 4096
 
+// The Ogg Speex header stores frames_per_packet as an unconstrained 32-bit integer. speexenc and
+// SFBOggSpeexEncoder write 1–10 and FFmpeg's libspeex encoder 1–8; FFmpeg's native decoder accepts at most 64.
+// A value of 0 is treated as 1, as speexdec does.
+#define MAX_FRAMES_PER_OGG_PACKET 64
+
 @interface SFBOggSpeexDecoder () {
   @private
     AVAudioPCMBuffer *_buffer;
@@ -123,14 +128,14 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
     // Read bitstream from input file
     NSInteger bytesRead;
     if (![_inputSource readBytes:data length:READ_SIZE_BYTES bytesRead:&bytesRead error:error]) {
-        ogg_sync_destroy(&_syncState);
+        ogg_sync_clear(&_syncState);
         return NO;
     }
 
     // Tell the sync layer how many bytes were written to its internal buffer
     int result = ogg_sync_wrote(&_syncState, bytesRead);
     if (result == -1) {
-        ogg_sync_destroy(&_syncState);
+        ogg_sync_clear(&_syncState);
 
         if (error) {
             *error = [self invalidFormatError:NSLocalizedString(@"Ogg", @"")];
@@ -141,7 +146,7 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
     // Turn the data we wrote into an ogg page
     result = ogg_sync_pageout(&_syncState, &_page);
     if (result != 1) {
-        ogg_sync_destroy(&_syncState);
+        ogg_sync_clear(&_syncState);
 
         if (error) {
             *error = [self invalidFormatError:NSLocalizedString(@"Ogg", @"")];
@@ -155,7 +160,7 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
     // Get the first Ogg page
     result = ogg_stream_pagein(&_streamState, &_page);
     if (result) {
-        ogg_sync_destroy(&_syncState);
+        ogg_sync_clear(&_syncState);
 
         if (error) {
             *error = [self invalidFormatError:NSLocalizedString(@"Ogg", @"")];
@@ -167,7 +172,7 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
     ogg_packet op;
     result = ogg_stream_packetout(&_streamState, &op);
     if (result != 1) {
-        ogg_sync_destroy(&_syncState);
+        ogg_sync_clear(&_syncState);
 
         if (error) {
             *error = [self invalidFormatError:NSLocalizedString(@"Ogg", @"")];
@@ -184,7 +189,7 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
     // Convert the packet to the Speex header
     SpeexHeader *header = speex_packet_to_header((char *)op.packet, (int)op.bytes);
     if (!header) {
-        ogg_sync_destroy(&_syncState);
+        ogg_sync_clear(&_syncState);
 
         if (error) {
             *error = [self invalidFormatError:NSLocalizedString(@"Ogg Speex", @"")];
@@ -193,7 +198,7 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
     }
     if (header->mode >= SPEEX_NB_MODES) {
         speex_header_free(header);
-        ogg_sync_destroy(&_syncState);
+        ogg_sync_clear(&_syncState);
 
         if (error) {
             *error = [self
@@ -210,7 +215,7 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
     const SpeexMode *mode = speex_lib_get_mode(header->mode);
     if (mode->bitstream_version != header->mode_bitstream_version) {
         speex_header_free(header);
-        ogg_sync_destroy(&_syncState);
+        ogg_sync_clear(&_syncState);
 
         if (error) {
             *error = [self
@@ -224,11 +229,43 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
         return NO;
     }
 
+    if (header->frames_per_packet < 0 || header->frames_per_packet > MAX_FRAMES_PER_OGG_PACKET) {
+        os_log_error(gSFBAudioDecoderLog, "Invalid Speex frames per packet: %d", header->frames_per_packet);
+        const spx_int32_t framesPerPacket = header->frames_per_packet;
+        speex_header_free(header);
+        ogg_sync_clear(&_syncState);
+
+        if (error) {
+            *error = [self invalidFormatError:NSLocalizedString(@"Ogg Speex", @"")
+                           recoverySuggestion:[NSString localizedStringWithFormat:
+                                                                NSLocalizedString(
+                                                                        @"Invalid Speex frames per packet: %d.", @""),
+                                                                framesPerPacket]];
+        }
+        return NO;
+    }
+
+    if (header->extra_headers < 0) {
+        os_log_error(gSFBAudioDecoderLog, "Invalid Speex extra header count: %d", header->extra_headers);
+        const spx_int32_t extraHeaders = header->extra_headers;
+        speex_header_free(header);
+        ogg_sync_clear(&_syncState);
+
+        if (error) {
+            *error = [self invalidFormatError:NSLocalizedString(@"Ogg Speex", @"")
+                           recoverySuggestion:[NSString localizedStringWithFormat:
+                                                                NSLocalizedString(
+                                                                        @"Invalid Speex extra header count: %d.", @""),
+                                                                extraHeaders]];
+        }
+        return NO;
+    }
+
     // Initialize the decoder
     _decoder = speex_decoder_init(mode);
     if (!_decoder) {
         speex_header_free(header);
-        ogg_sync_destroy(&_syncState);
+        ogg_sync_clear(&_syncState);
 
         if (error) {
             NSError *internalError = [self genericInternalError];
@@ -313,8 +350,26 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
     spx_int32_t speexFrameSize = 0;
     speex_decoder_ctl(_decoder, SPEEX_GET_FRAME_SIZE, &speexFrameSize);
 
-    _buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_processingFormat
-                                            frameCapacity:(AVAudioFrameCount)speexFrameSize];
+    // An Ogg packet may contain multiple Speex frames, all of which are decoded at once.
+    // On failure the decoder, bit-packing, stereo, and Ogg state are released by -closeReturningError:
+    AVAudioFrameCount bufferCapacity = 0;
+    if (speexFrameSize <= 0 || __builtin_mul_overflow((AVAudioFrameCount)speexFrameSize,
+                                                      (AVAudioFrameCount)_framesPerOggPacket, &bufferCapacity)) {
+        os_log_error(gSFBAudioDecoderLog, "Invalid Speex buffer size: %d frames × %d frames per packet", speexFrameSize,
+                     _framesPerOggPacket);
+        if (error) {
+            *error = [self invalidFormatError:NSLocalizedString(@"Ogg Speex", @"")];
+        }
+        return NO;
+    }
+
+    _buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_processingFormat frameCapacity:bufferCapacity];
+    if (!_buffer) {
+        if (error) {
+            *error = [self genericInternalError];
+        }
+        return NO;
+    }
 
     return YES;
 }
@@ -430,10 +485,11 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
                         break;
                     }
 
-                    // Ignore the following:
-                    //  - Speex comments in packet #2
-                    //  - Extra headers (optionally) in packets 3+
-                    if (_oggPacketCount != -1 && _extraSpeexHeaderCount + 1 <= _oggPacketCount) {
+                    // Ignore the following (packet numbers are zero-based; packet 0, the Speex header,
+                    // was consumed in -openReturningError:):
+                    //  - Speex comments in packet 1
+                    //  - Extra headers (optionally) in packets 2 through 1 + extra_headers
+                    if (_oggPacketCount != -1 && _oggPacketCount >= _extraSpeexHeaderCount + 2) {
                         // Detect Speex EOS
                         if (oggPacket.e_o_s && _streamState.serialno == _serialNumber) {
                             _eosReached = YES;
@@ -495,18 +551,25 @@ SFBAudioDecodingPropertiesKey const SFBAudioDecodingPropertiesKeyOggSpeexExtraHe
                             vDSP_vsdiv(buf, 1, &maxSampleValue, buf, 1,
                                        (vDSP_Length)speexFrameSize * _processingFormat.channelCount);
 
-                            // Copy the frames from the decoding buffer to the output buffer, skipping over any frames
-                            // already decoded
+                            // Append the frames to the intermediate buffer after any frames already decoded from
+                            // this packet
+                            if ((AVAudioFrameCount)speexFrameSize > _buffer.frameCapacity - _buffer.frameLength) {
+                                os_log_error(gSFBAudioDecoderLog, "Ogg Speex decoding error: buffer overflow");
+                                if (error) {
+                                    *error = [self genericDecodingError];
+                                }
+                                return NO;
+                            }
 
                             float *output = _buffer.floatChannelData[0] + (_buffer.frameLength * _buffer.stride);
                             memcpy(output, buf,
                                    (size_t)speexFrameSize * _processingFormat.channelCount * sizeof(float));
 
-                            _buffer.frameLength = (AVAudioFrameCount)speexFrameSize;
-
-                            // Packet processing finished
-                            --packetsDesired;
+                            _buffer.frameLength += (AVAudioFrameCount)speexFrameSize;
                         }
+
+                        // Packet processing finished
+                        --packetsDesired;
                     }
 
                     ++_oggPacketCount;
