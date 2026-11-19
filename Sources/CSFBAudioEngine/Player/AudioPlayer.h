@@ -150,15 +150,18 @@ class AudioPlayer final {
     /// Thread used for decoding
     std::jthread decodingThread_;
     /// Semaphore used for communication with the decoding thread
-    dsema::Semaphore decodingSemaphore_{0};
+    msema::Semaphore decodingSemaphore_{0};
 
     /// Thread used for event processing
     std::jthread eventThread_;
     /// Semaphore used for communication with the event processing thread
-    dsema::Semaphore eventSemaphore_{0};
+    msema::Semaphore eventSemaphore_{0};
+    /// Whether `eventSemaphore_` has been signaled since the event processing thread last began draining events
+    std::atomic_bool eventSignaled_{false};
+    static_assert(std::atomic_bool::is_always_lock_free, "Lock-free std::atomic_bool required");
 
     /// Message queue communicating events to the event processing thread
-    mpsc::MessageQueue<256, 32> events_;
+    mpsc::MessageQueue<256, 48> events_;
 
     /// The `AVAudioEngine` instance
     AVAudioEngine *engine_{nil};
@@ -421,11 +424,11 @@ class AudioPlayer final {
     /// - note: This is the thread entry point for the decoding thread
     void processDecoders(std::stop_token stoken) noexcept;
 
-    /// Processes decoder cancelations and returns the first active decoder state
-    DecoderState *_Nullable processDecoderCancelations(bool &formatMismatch) noexcept;
+    /// Processes decoder cancelations
+    void processDecoderCancelations(bool &formatMismatch) noexcept;
 
-    /// Processes the pending seek for `decoderState`
-    bool processPendingSeek(DecoderState *_Nonnull decoderState, bool &formatMismatch) noexcept;
+    /// Processes the pending seek for the first active decoder, if any
+    bool processPendingSeek(bool &formatMismatch) noexcept;
 
     /// Returns the first decoder state in `activeDecoders_` that is eligible for decoding
     DecoderState *_Nullable firstIncompleteDecoderState() const noexcept;
@@ -454,6 +457,12 @@ class AudioPlayer final {
     /// Returns the appropriate decoding semaphore timeout
     std::chrono::nanoseconds decodingTimeout(DecoderState *_Nullable decoderState) const noexcept;
 
+#ifndef NDEBUG
+    /// Returns `true` if the decoding thread has a decoder to process and should not be idle
+    /// - note: Used only to detect missed signals when a wait with no decoder to process times out
+    bool shouldBeProcessingDecoders() const noexcept;
+#endif /* !NDEBUG */
+
     // MARK: - Rendering
 
     /// Render block implementation
@@ -461,16 +470,15 @@ class AudioPlayer final {
                     AudioBufferList &outputData) noexcept;
 
     /// Enqueues frames rendered event(s) for rendered audio
-    void enqueueFramesRenderedEvents(uint32_t framesRead, const AudioTimeStamp &timestamp) noexcept;
+    /// - returns: `true` if an event was enqueued
+    [[nodiscard]] bool enqueueFramesRenderedEvents(uint32_t framesRead, const AudioTimeStamp &timestamp) noexcept;
 
     /// Enqueues an empty frames rendered event if an empty decoded chunk descriptor is present
-    void enqueueEmptyFramesRenderedEvent(const AudioTimeStamp &timestamp) noexcept;
+    /// - returns: `true` if an event was enqueued
+    [[nodiscard]] bool enqueueEmptyFramesRenderedEvent(const AudioTimeStamp &timestamp) noexcept;
 
     /// The current rendering chunk descriptor
     std::optional<detail::RenderingChunkDescriptor> renderingChunk_{};
-
-    /// The sequence number of the decoder that produced the most recently rendered chunk
-    uint64_t lastRenderedSequenceNumber_{0};
 
     /// The host time of the last ring buffer underrun
     uint64_t lastUnderrunHostTime_{0};
@@ -494,16 +502,12 @@ class AudioPlayer final {
         decoderCanceled = 4,
         /// Allocation failure
         allocationFailure = 5,
-        /// Rendering started
-        renderingStarted = 6,
         /// Audio frames rendered from ring buffer
-        framesRendered = 7,
-        /// Rendering complete
-        renderingComplete = 8,
+        framesRendered = 6,
         /// Ring buffer contained fewer audio frames than requested
-        renderBufferUnderrun = 9,
+        renderBufferUnderrun = 7,
         /// `AVAudioEngine` pause requested
-        pauseEngine = 10,
+        pauseEngine = 8,
     };
 
     // MARK: - Event Processing
@@ -527,14 +531,8 @@ class AudioPlayer final {
     /// Dequeues and processes an allocation failure event from `events_`
     bool processAllocationFailureEvent() noexcept;
 
-    /// Dequeues and processes a rendering started event from `events_`
-    bool processRenderingStartedEvent() noexcept;
-
     /// Dequeues and processes a frames rendered event from `events_`
     bool processFramesRenderedEvent() noexcept;
-
-    /// Dequeues and processes a rendering complete event from `events_`
-    bool processRenderingCompleteEvent() noexcept;
 
     /// Reads and processes a render buffer underrun event from `events_`
     bool processRenderBufferUnderrunEvent() noexcept;
@@ -543,11 +541,13 @@ class AudioPlayer final {
     bool processPauseEngineEvent() noexcept;
 
     /// Called when the first audio frame from a decoder will render.
-    void handleRenderingWillStartEvent(Decoder _Nonnull decoder, uint64_t hostTime, uint64_t outputGeneration) noexcept;
+    void handleRenderingWillStart(Decoder _Nonnull decoder, uint64_t hostTime, uint64_t outputGeneration) noexcept;
 
     /// Called when the final audio frame from a decoder will render.
-    void handleRenderingWillCompleteEvent(Decoder _Nonnull decoder, uint64_t hostTime,
-                                          uint64_t outputGeneration) noexcept;
+    void handleRenderingWillComplete(Decoder _Nonnull decoder, uint64_t hostTime, uint64_t outputGeneration) noexcept;
+
+    /// Signals the event semaphore if required
+    void signalEventSemaphore() noexcept;
 
     // MARK: - Transport Snapshots
 
@@ -673,6 +673,12 @@ inline AVAudioSourceNode *_Nonnull AudioPlayer::sourceNode() const noexcept { re
 inline AVAudioMixerNode *_Nonnull AudioPlayer::mainMixerNode() const noexcept { return engine_.mainMixerNode; }
 
 inline AVAudioOutputNode *_Nonnull AudioPlayer::outputNode() const noexcept { return engine_.outputNode; }
+
+inline void AudioPlayer::signalEventSemaphore() noexcept {
+    if (!eventSignaled_.exchange(true, std::memory_order_acq_rel)) {
+        eventSemaphore_.signal();
+    }
+}
 
 // MARK: Transport Snapshot
 
