@@ -20,3 +20,10 @@ jobs:
         run: swift build -v
       - name: Run tests
         run: swift test -v
+      - name: Build for iOS
+        run: |
+          xcodebuild build \
+            -scheme SFBAudioEngine \
+            -destination 'generic/platform=iOS' \
+            -disableAutomaticPackageResolution \
+            CODE_SIGNING_ALLOWED=NO
