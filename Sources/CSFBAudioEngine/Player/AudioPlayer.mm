@@ -131,8 +131,7 @@ NSString *_Nullable audioDeviceName(AUAudioUnit *_Nonnull audioUnit) noexcept {
 /// Returns the output hardware latency of `deviceID` in seconds, or `std::nullopt` if it cannot be determined
 ///
 /// The hardware latency is the device latency plus the largest latency of the device's active output streams. Streams
-/// are not matched to the channels in use, so if their latencies differ the result may be slightly high, which is
-/// harmless when scheduling. The safety offset is not included because the render block's timestamps account for it.
+/// are not matched to the channels in use, so if their latencies differ the result may be slightly high.
 std::optional<double> outputHardwareLatencyForDevice(AudioObjectID deviceID) noexcept {
     if (deviceID == kAudioObjectUnknown) {
         return std::nullopt;
