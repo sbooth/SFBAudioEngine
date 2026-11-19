@@ -176,12 +176,9 @@ std::optional<double> outputHardwareLatencyForDevice(AudioObjectID deviceID) noe
                      status, SFBCStringForOSType(status));
         return std::nullopt;
     }
-    // Streams may have been removed since the size was read. If streams were added they are omitted, since the HAL
-    // returns as many as fit.
     streams.resize(dataSize / sizeof(AudioObjectID));
 
-    // Use the largest latency of the active output streams. A stream whose latency cannot be read, for example because
-    // it was removed since the stream list was read, is skipped.
+    // Use the largest latency of the active output streams
     std::optional<UInt32> streamLatency;
     for (const auto stream : streams) {
         // Assume the stream is active unless it reports otherwise
