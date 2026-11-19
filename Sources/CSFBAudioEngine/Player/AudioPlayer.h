@@ -217,12 +217,7 @@ class AudioPlayer final {
                   "Lock-free std::atomic<SFBAudioPlayerEndOfAudioAction> required");
 
 #if !TARGET_OS_IPHONE
-    /// The output device's hardware latency in seconds: its device latency plus the largest latency of its active
-    /// output streams
-    ///
-    /// `AVAudioEngine`'s presentation latency does not always include the stream latency, so the hardware latency is
-    /// computed from the device. This is updated when the engine is started and when the output device is changed, and
-    /// is negative if it could not be determined.
+    /// The output device's latency plus the largest latency of its active output streams
     std::atomic<double> outputHardwareLatency_{-1};
 #endif /* !TARGET_OS_IPHONE */
 
