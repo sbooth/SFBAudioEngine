@@ -10,6 +10,8 @@ jobs:
   build:
     runs-on: macos-latest
     steps:
+      - name: Install xcbeautify
+        run: brew install xcbeautify
       - name: Set Xcode version
         uses: maxim-lobanov/setup-xcode@v1
         with:
@@ -17,6 +19,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
       - name: Build
-        run: swift build -v
+        run: |
+          set -o pipefail
+          swift build 2>&1 | xcbeautify --renderer github-actions
       - name: Run tests
         run: swift test -v
