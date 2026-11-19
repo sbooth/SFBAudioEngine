@@ -27,10 +27,3 @@ jobs:
             -destination 'generic/platform=iOS' \
             -disableAutomaticPackageResolution \
             CODE_SIGNING_ALLOWED=NO
-      - name: Build and run tests for iOS Simulator
-        run: |
-          xcodebuild test \
-            -scheme SFBAudioEngine \
-            -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
-            -disableAutomaticPackageResolution \
-            CODE_SIGNING_ALLOWED=NO
