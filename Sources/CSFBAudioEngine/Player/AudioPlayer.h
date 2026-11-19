@@ -150,12 +150,12 @@ class AudioPlayer final {
     /// Thread used for decoding
     std::jthread decodingThread_;
     /// Semaphore used for communication with the decoding thread
-    msema::Semaphore decodingSemaphore_{0};
+    dsema::Semaphore decodingSemaphore_{0};
 
     /// Thread used for event processing
     std::jthread eventThread_;
     /// Semaphore used for communication with the event processing thread
-    msema::Semaphore eventSemaphore_{0};
+    dsema::Semaphore eventSemaphore_{0};
     /// Whether `eventSemaphore_` has been signaled since the event processing thread last began draining events
     std::atomic_bool eventSignaled_{false};
     static_assert(std::atomic_bool::is_always_lock_free, "Lock-free std::atomic_bool required");
