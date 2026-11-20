@@ -2407,7 +2407,8 @@ bool sfb::AudioPlayer::processPauseEngineEvent() noexcept {
     }
 
     // Add the downstream presentation latency to determine when the audio should reach the device
-    hostTime += hostTimeDeltaForSeconds(sourceNode_.outputPresentationLatency);
+    // Add a 100 msec delay before pausing the engine to avoid audible artifacts (on some devices)
+    hostTime += hostTimeDeltaForSeconds(sourceNode_.outputPresentationLatency + 0.100);
 
     // Since the engine pause is submitted for asynchronous execution, store a weak reference to the owning
     // SFBAudioPlayer to prevent use-after-free in the event the player is deallocated before the closure is called
