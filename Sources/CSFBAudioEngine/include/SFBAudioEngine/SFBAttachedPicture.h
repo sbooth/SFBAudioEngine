@@ -67,8 +67,7 @@ typedef NS_ENUM(NSUInteger, SFBAttachedPictureType) {
 /// A class encapsulating a single attached picture.
 ///
 /// Most file formats may have more than one attached picture of each type.
-NS_SWIFT_NAME(AttachedPicture) NS_SWIFT_SENDABLE
-@interface SFBAttachedPicture : NSObject <NSCopying>
+NS_SWIFT_NAME(AttachedPicture) NS_SWIFT_SENDABLE @interface SFBAttachedPicture : NSObject<NSCopying>
 
 + (instancetype)new NS_UNAVAILABLE;
 - (instancetype)init NS_UNAVAILABLE;
