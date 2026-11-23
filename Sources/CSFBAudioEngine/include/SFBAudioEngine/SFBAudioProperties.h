@@ -29,8 +29,7 @@ extern SFBAudioPropertiesKey const SFBAudioPropertiesKeyDuration;
 extern SFBAudioPropertiesKey const SFBAudioPropertiesKeyBitrate;
 
 /// Class providing information on basic audio properties
-NS_SWIFT_NAME(AudioProperties)
-@interface SFBAudioProperties : NSObject <NSCopying>
+NS_SWIFT_NAME(AudioProperties) NS_SWIFT_SENDABLE @interface SFBAudioProperties : NSObject<NSCopying>
 
 /// Returns an initialized an `SFBAudioProperties` object
 - (instancetype)init NS_DESIGNATED_INITIALIZER;
